@@ -64,3 +64,9 @@ def install_extras(svc: Services) -> None:
             svc.extras["llm"] = build_provider(svc.settings)
         except ImportError:
             pass
+    llm = svc.extras.get("llm")
+    wants_classifier = svc.settings.policy_llm_classifier and getattr(llm, "name", None) == "anthropic"
+    if "policy_classifier" not in svc.extras and wants_classifier and llm is not None:
+        from angel_engine.ai.classifier import ClaudePolicyClassifier
+
+        svc.extras["policy_classifier"] = ClaudePolicyClassifier(llm)
