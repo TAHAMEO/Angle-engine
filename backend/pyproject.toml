@@ -79,7 +79,7 @@ angel_engine = [
 ]
 
 [tool.ruff]
-line-length = 100
+line-length = 120
 target-version = "py311"
 src = ["src", "tests"]
 
@@ -87,6 +87,7 @@ src = ["src", "tests"]
 select = ["E", "F", "W", "I", "B", "UP", "S", "ASYNC", "RUF", "SIM", "PL", "C4", "PIE", "T20"]
 ignore = [
   "PLR0913",  # many arguments: explicit service signatures are intentional
+  "PLR0917",  # FastAPI endpoints take many query parameters
   "PLR2004",  # magic values in comparisons
   "PLR0911", "PLR0912", "PLR0915",
   "S101",     # asserts are used for internal invariants and in tests
