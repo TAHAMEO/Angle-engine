@@ -252,3 +252,62 @@ async def requeue_job(job_id: uuid.UUID, principal: JobsManager, db: DbSession) 
         created_at=job.created_at,
         finished_at=job.finished_at,
     )
+
+
+# --------------------------------------------------------------------------------------------------
+# Platform settings (retention)
+# --------------------------------------------------------------------------------------------------
+SettingsManager = Annotated[Principal, Depends(require(Perm.RETENTION_MANAGE))]
+
+
+class RetentionSettingsOut(BaseModel):
+    values: dict[str, int]
+    defaults: dict[str, int]
+    bounds: dict[str, tuple[int, int]]
+    overridden: list[str]
+
+
+async def _retention_settings(db: DbSession, principal: Principal) -> RetentionSettingsOut:
+    from angel_engine.retention.policy import BOUNDS, RetentionPolicy, load_policy, stored_overrides
+
+    settings = principal.services.settings
+    overrides = await stored_overrides(db)
+    return RetentionSettingsOut(
+        values=(await load_policy(db, settings)).as_dict(),
+        defaults=RetentionPolicy.defaults(settings).as_dict(),
+        bounds=dict(BOUNDS),
+        overridden=sorted(overrides),
+    )
+
+
+@router.get("/settings/retention")
+async def get_retention_settings(principal: SettingsManager, db: DbSession) -> RetentionSettingsOut:
+    return await _retention_settings(db, principal)
+
+
+@router.patch("/settings/retention")
+async def update_retention_settings(
+    body: dict[str, int | None], principal: SettingsManager, db: DbSession
+) -> RetentionSettingsOut:
+    """Set (integer) or clear (null) retention overrides. Values outside the hard bounds are rejected."""
+    from angel_engine.db.models import Setting
+    from angel_engine.retention.policy import BOUNDS, SETTING_KEY, stored_overrides, validate_overrides
+
+    require_recent_reauth(principal)
+    unknown = sorted(k for k in body if k not in BOUNDS)
+    if unknown:
+        raise BadRequest("Unknown retention settings.", code="unknown_setting", fields=unknown)
+    current = await stored_overrides(db)
+    cleared = [k for k, v in body.items() if v is None]
+    updates = validate_overrides({k: v for k, v in body.items() if v is not None})
+    for key in cleared:
+        current.pop(key, None)
+    current.update(updates)
+    row = await db.get(Setting, SETTING_KEY)
+    if row is None:
+        db.add(Setting(key=SETTING_KEY, value=current, updated_by=principal.user_id))
+    else:
+        row.value, row.updated_by = dict(current), principal.user_id
+    await db.flush()
+    principal.audit(db, "settings.retention_updated", details={"set": sorted(updates), "cleared": sorted(cleared)})
+    return await _retention_settings(db, principal)

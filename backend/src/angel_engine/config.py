@@ -100,6 +100,10 @@ class Settings(BaseSettings):
     # --- Limits & retention --------------------------------------------------------------------
     rate_limit_enabled: bool = True
     ai_transcript_retention_days: int = 30
+    draft_inactive_days: int = 30
+    refused_investigation_days: int = 90
+    policy_text_retention_days: int = 90
+    abuse_report_retention_days: int = 730
     closed_investigation_archive_days: int = 90
     closed_investigation_delete_days: int = 365
     audit_retention_days: int = 730

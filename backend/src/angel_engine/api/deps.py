@@ -16,7 +16,7 @@ from angel_engine.audit.chain import AuditEvent, append_now, discard_pending, fl
 from angel_engine.audit.chain import record as audit_record
 from angel_engine.auth import csrf
 from angel_engine.auth.sessions import ResolvedSession, recently_reauthenticated, resolve
-from angel_engine.authz.permissions import Perm, authorize, role_allows
+from angel_engine.authz.permissions import INVESTIGATION_SCOPED, Perm, authorize, role_allows
 from angel_engine.config import Settings
 from angel_engine.core.clock import utcnow
 from angel_engine.core.enums import InvestigationStatus, SessionState
@@ -245,7 +245,7 @@ def require_recent_reauth(principal: Principal) -> None:
 # --------------------------------------------------------------------------------------------------
 # Investigation scope
 # --------------------------------------------------------------------------------------------------
-_STATE_RULES: dict[Perm, frozenset[str]] = {
+STATE_RULES: dict[Perm, frozenset[str]] = {
     Perm.CONTENT_READ: frozenset(s.value for s in InvestigationStatus if s != InvestigationStatus.DELETED),
     Perm.CONTENT_WRITE: frozenset({InvestigationStatus.ACTIVE.value}),
     Perm.FINDING_VERIFY: frozenset({InvestigationStatus.ACTIVE.value}),
@@ -263,6 +263,15 @@ _STATE_RULES: dict[Perm, frozenset[str]] = {
     ),
     Perm.INVESTIGATION_MANAGE: frozenset(s.value for s in InvestigationStatus if s != InvestigationStatus.DELETED),
 }
+
+
+def effective_permissions(role: str, membership: str | None, status: str, *, oversight: bool = False) -> list[str]:
+    """Investigation-scoped permissions the user can exercise right now (role ∧ membership ∧ state)."""
+    return sorted(
+        p.value
+        for p in INVESTIGATION_SCOPED
+        if authorize(role, membership, p, oversight=oversight) and status in STATE_RULES.get(p, frozenset({status}))
+    )
 
 
 @dataclass(slots=True)
@@ -336,7 +345,7 @@ def investigation_scope(perm: Perm) -> Callable[..., Coroutine[Any, Any, InvCtx]
             raise NotFound()
         if not authorize(principal.role, membership, perm, oversight=oversight):
             raise Forbidden(code="missing_permission", permission=perm.value)
-        allowed_states = _STATE_RULES.get(perm)
+        allowed_states = STATE_RULES.get(perm)
         if allowed_states is not None and inv.status not in allowed_states:
             from angel_engine.core.problems import ConflictState
 

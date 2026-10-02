@@ -117,6 +117,15 @@ class RateLimited(ProblemError):
         self.headers = {"Retry-After": str(max(1, retry_after))}
 
 
+class PolicyAcknowledgementRequired(ProblemError):
+    """A ``warn`` decision: the user must acknowledge the notices and resubmit."""
+
+    status, slug, title = 409, "policy-acknowledgement-required", "Please review these notices before continuing"
+
+    def __init__(self, detail: str, *, policy: dict[str, Any]) -> None:
+        super().__init__(detail, policy=policy)
+
+
 class PolicyRefused(ProblemError):
     """Acceptable-use refusal carrying the decision and lawful alternatives."""
 
