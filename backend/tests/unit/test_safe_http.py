@@ -165,6 +165,34 @@ async def test_credentials_never_follow_a_cross_site_redirect() -> None:
     assert first.headers["user-agent"] == UA
 
 
+async def test_post_sends_the_body_and_refuses_redirects() -> None:
+    seen: list[httpx.Request] = []
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        seen.append(request)
+        if request.url.path == "/moved":
+            return httpx.Response(307, headers={"location": "https://evil.example.net/collect"})
+        return httpx.Response(200, json={"ok": True})
+
+    async with _client(handler) as client:
+        result = await client.post(
+            "https://api.example.org/search",
+            content=b"payload",
+            content_type="application/octet-stream",
+            headers={"X-Goog-Api-Key": "k-1", "Cookie": "a=b", "Referer": "https://x.example/"},
+            min_interval=0,
+        )
+        assert result.ok and result.json() == {"ok": True}
+        with pytest.raises(HttpPolicyError, match="redirect"):
+            await client.post("https://api.example.org/moved", content=b"x", content_type="text/plain", min_interval=0)
+        with pytest.raises(HttpPolicyError):
+            await client.post("http://127.0.0.1/admin", content=b"x", content_type="text/plain", min_interval=0)
+    first = seen[0]
+    assert first.method == "POST" and first.content == b"payload" and first.headers["x-goog-api-key"] == "k-1"
+    assert "cookie" not in first.headers and "referer" not in first.headers
+    assert len(seen) == 2  # the redirect target was never contacted, the private address never attempted
+
+
 async def test_size_cap_counts_decoded_bytes() -> None:
     import gzip
 

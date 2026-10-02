@@ -44,13 +44,15 @@ from angel_engine.db.models import (
 )
 from angel_engine.entities.service import EntityError, EntityInput, canonicalize, upsert_entity
 from angel_engine.evidence.labels import next_label
-from angel_engine.evidence.service import EvidenceInput, add_evidence, redaction_mode
+from angel_engine.evidence.service import EvidenceInput, SourceInput, add_evidence, redaction_mode, upsert_source
+from angel_engine.evidence.urls import UrlError
 from angel_engine.findings import service as findings
 from angel_engine.findings.service import EvidenceDeletion, FindingInput, LinkInput
 from angel_engine.graph.service import RelationshipInput, upsert_relationship
 from angel_engine.guard import RedactionContext, SourceKind, redact_text
 from angel_engine.images import hashing
 from angel_engine.images.errors import ImageRejected
+from angel_engine.images.providers import OccurrenceResult, VisualLabel
 from angel_engine.images.types import (
     FACE_NOTICE,
     Clue,
@@ -811,7 +813,7 @@ async def persist_analysis(
     return ctx.counts
 
 
-def _store_clue(db: AsyncSession, cipher: FieldCipher, image: Image, clue: Clue) -> None:
+def _store_clue(db: AsyncSession, cipher: FieldCipher, image: Image, clue: Clue, provenance: str = "observed") -> None:
     cid = new_id()
     db.add(
         ImageClue(
@@ -826,7 +828,7 @@ def _store_clue(db: AsyncSession, cipher: FieldCipher, image: Image, clue: Clue)
             bbox=asdict(clue.box) if clue.box else None,
             confidence=clue.confidence,
             confidence_basis=clue.confidence_basis,
-            provenance="observed",
+            provenance=provenance,
             source=clue.source,
             platform=clue.platform,
             precision=clue.precision,
@@ -884,3 +886,237 @@ def search_gate(inv: Investigation, image: Image, *, external: bool = True) -> S
             needs_approval=True,
         )
     return SearchGate(True)
+
+
+# --------------------------------------------------------------------------------------------------
+# Public-occurrence results (reported by a provider)
+# --------------------------------------------------------------------------------------------------
+_MATCH_PHRASES = {
+    "matching_copy": "a matching copy of",
+    "exact": "a full copy of",
+    "partial": "a partial copy of",
+    "similar": "an image visually similar to",
+}
+
+
+async def persist_occurrences(
+    db: AsyncSession,
+    cipher: FieldCipher,
+    inv: Investigation,
+    image: Image,
+    result: OccurrenceResult,
+    *,
+    provider_name: str,
+    run_id: uuid.UUID,
+    actor_id: uuid.UUID | None,
+) -> dict[str, int]:
+    """Matches become sources with source-reported evidence and unverified findings; logos and landmarks
+    become AI-hypothesis clues. Nothing here is treated as established fact."""
+    label = image_label(image)
+    ctx = _Ctx(db, cipher, inv, image, label, actor_id, {})
+    ctx.image_entity = await _image_entity(ctx, image, label)
+    earliest: tuple[datetime, EvidenceItem, str] | None = None
+    for match in result.matches:
+        try:
+            upsert = await upsert_source(
+                db,
+                cipher,
+                inv,
+                SourceInput(
+                    url=match.page_url,
+                    category="public_image_sources",
+                    connector_id=result.provider,
+                    title=match.page_title,
+                    access_status="reference_only",
+                    created_by=actor_id,
+                ),
+            )
+        except (UrlError, ValidationProblem):
+            continue
+        source = upsert.source
+        phrase = _MATCH_PHRASES.get(match.match_type, "a match for")
+        details = [f"{provider_name} reports {phrase} image {label} on this page ({source.host})"]
+        if match.image_url:
+            details.append(f"image file: {match.image_url}")
+        if match.crawl_date:
+            details.append(f"first crawled {match.crawl_date.date().isoformat()}")
+        if match.score is not None:
+            details.append(f"match score {match.score:g}")
+        try:
+            added = await add_evidence(
+                db,
+                cipher,
+                inv,
+                EvidenceInput(
+                    excerpt="; ".join(details) + ".",
+                    evidence_type="image_match",
+                    provenance="source_reported",
+                    source_id=source.id,
+                    origin_image_id=image.id,
+                    collection_run_id=run_id,
+                    created_by=actor_id,
+                    extra={
+                        "provider": result.provider,
+                        "match_type": match.match_type,
+                        "image_url": match.image_url,
+                        "score": match.score,
+                        "crawl_date": match.crawl_date.isoformat() if match.crawl_date else None,
+                    },
+                ),
+            )
+        except ValidationProblem:
+            continue
+        if not added.created:
+            continue
+        ctx.bump("evidence")
+        statement = f"{provider_name} reports {phrase} image {label} on {source.host}."
+        try:
+            await findings.create_finding(
+                db,
+                cipher,
+                inv,
+                FindingInput(
+                    statement=statement,
+                    category="public_image_sources",
+                    provenance="source_reported",
+                    links=(LinkInput(added.item.id, directly_states=True),),
+                    created_via="connector",
+                    created_by=actor_id,
+                    source_kind=SourceKind.WEB,
+                ),
+            )
+            ctx.bump("findings")
+        except ValidationProblem:
+            pass
+        if match.match_type != "similar":
+            site = await _entity(
+                ctx, EntityInput(type="website", name=source.registrable_domain, created_via="connector")
+            )
+            if site is not None and ctx.image_entity is not None:
+                _, created = await upsert_relationship(
+                    db,
+                    inv,
+                    RelationshipInput(
+                        from_entity_id=ctx.image_entity.id,
+                        rel_type="hosted_on",
+                        to_entity_id=site.id,
+                        evidence_ids=(added.item.id,),
+                        provenance="source_reported",
+                        created_via="connector",
+                        created_by=actor_id,
+                    ),
+                )
+                if created:
+                    ctx.bump("relationships")
+        if match.crawl_date and (earliest is None or match.crawl_date < earliest[0]):
+            earliest = (match.crawl_date, added.item, source.host)
+    if earliest is not None:
+        when, evidence, host = earliest
+        await create_event(
+            db,
+            cipher,
+            inv,
+            EventInput(
+                occurred_start=when,
+                precision="day",
+                kind="first_archived",
+                title=f"{provider_name} first crawled a copy of image {label} ({host})",
+                evidence_ids=(evidence.id,),
+                description=CAVEATS["first_archived"],
+                provenance="source_reported",
+                created_via="connector",
+                created_by=actor_id,
+            ),
+        )
+        ctx.bump("timeline_events")
+    for visual in result.labels:
+        await _visual_label(ctx, visual, provider_name)
+    return ctx.counts
+
+
+async def _visual_label(ctx: _Ctx, visual: VisualLabel, provider_name: str) -> None:
+    kind = "logo" if visual.kind == "brand" else "landmark"
+    basis = f"{provider_name} {kind} detection score {visual.score:.2f}"
+    confidence = "high" if visual.score >= 0.85 else "moderate" if visual.score >= 0.6 else "low"
+    clue_type = ClueType.BRAND if visual.kind == "brand" else ClueType.LANDMARK
+    mac = ctx.cipher.mac(CLUE_PURPOSE, f"{clue_type.value}|{visual.name.casefold()}")
+    exists = await ctx.db.execute(
+        select(ImageClue.id).where(ImageClue.image_id == ctx.image.id, ImageClue.normalized_mac == mac)
+    )
+    if exists.first() is None:
+        clue = Clue(
+            type=clue_type,
+            value=visual.name,
+            normalized=visual.name.casefold(),
+            source="provider",
+            confidence=confidence,
+            confidence_basis=basis,
+        )
+        _store_clue(ctx.db, ctx.cipher, ctx.image, clue, provenance="ai_hypothesis")
+        ctx.bump("clues")
+    evidence = await _evidence_reported(
+        ctx,
+        f"{provider_name} reports the {kind} “{visual.name}” in image {ctx.label} (score {visual.score:.2f}).",
+        {"provider": provider_name, "kind": kind, "score": visual.score},
+    )
+    if evidence is None:
+        return
+    try:
+        await findings.create_finding(
+            ctx.db,
+            ctx.cipher,
+            ctx.inv,
+            FindingInput(
+                statement=f"{provider_name} suggests that image {ctx.label} shows the {kind} “{visual.name}”.",
+                category="image_analysis",
+                provenance="ai_hypothesis",
+                links=(LinkInput(evidence.id),),
+                created_via="image_analysis",
+                created_by=ctx.actor_id,
+                source_kind=SourceKind.WEB,
+            ),
+        )
+        ctx.bump("findings")
+    except ValidationProblem:
+        pass
+    target = await _entity(ctx, EntityInput(type=visual.kind, name=visual.name, created_via="image_analysis"))
+    if target is not None and ctx.image_entity is not None:
+        _, created = await upsert_relationship(
+            ctx.db,
+            ctx.inv,
+            RelationshipInput(
+                from_entity_id=ctx.image_entity.id,
+                rel_type="depicts",
+                to_entity_id=target.id,
+                evidence_ids=(evidence.id,),
+                provenance="ai_hypothesis",
+                confidence=confidence,
+                created_via="image_analysis",
+                created_by=ctx.actor_id,
+            ),
+        )
+        if created:
+            ctx.bump("relationships")
+
+
+async def _evidence_reported(ctx: _Ctx, excerpt: str, extra: dict[str, Any]) -> EvidenceItem | None:
+    try:
+        added = await add_evidence(
+            ctx.db,
+            ctx.cipher,
+            ctx.inv,
+            EvidenceInput(
+                excerpt=excerpt,
+                evidence_type="image_clue",
+                provenance="source_reported",
+                origin_image_id=ctx.image.id,
+                extra=extra,
+                source_kind=SourceKind.WEB,
+                created_by=ctx.actor_id,
+            ),
+        )
+    except ValidationProblem:
+        return None
+    if added.created:
+        ctx.bump("evidence")
+    return added.item

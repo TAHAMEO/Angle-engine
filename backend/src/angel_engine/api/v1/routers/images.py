@@ -23,7 +23,8 @@ from angel_engine.api.deps import InvCtx, audit_separately, enforce_rate_limit, 
 from angel_engine.api.v1.routers._common import ReadCtx, WriteCtx, get_scoped
 from angel_engine.api.v1.routers.collection import RunOut, run_out
 from angel_engine.authz.permissions import Perm, role_allows
-from angel_engine.core.enums import ImageStatus, InvestigationStatus
+from angel_engine.core.enums import ImageStatus, InvestigationStatus, JobQueue
+from angel_engine.core.ids import new_id
 from angel_engine.core.problems import (
     BadRequest,
     ConflictState,
@@ -35,6 +36,7 @@ from angel_engine.core.problems import (
 )
 from angel_engine.crypto.envelope import FieldCipher
 from angel_engine.db.models import (
+    CollectionRun,
     EvidenceItem,
     Finding,
     FindingEvidence,
@@ -54,8 +56,15 @@ from angel_engine.guard import SourceKind
 from angel_engine.images import hashing
 from angel_engine.images import service as images
 from angel_engine.images.errors import ImageRejected
+from angel_engine.images.providers import provider_status
 from angel_engine.images.types import FACE_NOTICE, UPLOAD_NOTICE
-from angel_engine.infra.ratelimit.gcra import UPLOAD_MIB_USER, UPLOADS_USER
+from angel_engine.infra.ratelimit.gcra import (
+    COLLECTION_INVESTIGATION,
+    COLLECTION_USER,
+    UPLOAD_MIB_USER,
+    UPLOADS_USER,
+)
+from angel_engine.jobs.queue import enqueue
 from angel_engine.osint import collection
 from angel_engine.policy.types import PolicyContext, Surface
 from angel_engine.policy_gate import screen
@@ -240,6 +249,10 @@ class SimilarOut(BaseModel):
 
 class ApprovalIn(BaseModel):
     purpose: str = Field(min_length=MIN_APPROVAL_PURPOSE, max_length=2000)
+
+
+class OccurrenceIn(BaseModel):
+    provider: Literal["tineye", "google_vision"]
 
 
 # --------------------------------------------------------------------------------------------------
@@ -575,6 +588,7 @@ async def promote_clue(image_id: uuid.UUID, clue_id: uuid.UUID, body: PromoteIn,
             actor_event=ctx.principal.event(""),
         )
     kind = view["type"].replace("_", " ")
+    reported = clue.provenance == "ai_hypothesis"  # e.g. a logo reported by a vision provider
     excerpt = f"Visual clue in image {label} ({kind}, from {view['source']}): {view['value']}"
     added = await add_evidence(
         ctx.db,
@@ -583,7 +597,7 @@ async def promote_clue(image_id: uuid.UUID, clue_id: uuid.UUID, body: PromoteIn,
         EvidenceInput(
             excerpt=excerpt,
             evidence_type="image_clue",
-            provenance="observed",
+            provenance="source_reported" if reported else "observed",
             origin_image_id=image.id,
             extra={
                 "image": label,
@@ -603,7 +617,7 @@ async def promote_clue(image_id: uuid.UUID, clue_id: uuid.UUID, body: PromoteIn,
         FindingInput(
             statement=statement,
             category="image_analysis",
-            provenance="observed",
+            provenance="ai_hypothesis" if reported else "observed",
             links=(LinkInput(added.item.id, directly_states=True),),
             confidence=view["confidence"],
             confidence_basis=view["confidence_basis"],
@@ -794,6 +808,76 @@ async def approve_reverse_search(image_id: uuid.UUID, body: ApprovalIn, ctx: Rea
         details={"faces": image.face_count, "persons": image.person_count},
     )
     return await _out(ctx, image)  # type: ignore[no-any-return]
+
+
+@router.post(BASE + "/{image_id}/public-occurrence-search", status_code=202)
+async def public_occurrence_search(
+    image_id: uuid.UUID,
+    body: OccurrenceIn,
+    ctx: WriteCtx,
+    idempotency_key: Annotated[str | None, Header(max_length=100)] = None,
+) -> RunOut:
+    """Ask a reverse-image provider where else the image appears. Only the sanitized preview is sent; the search is
+    refused in restricted mode and, when faces or people were detected, until a supervisor approved it."""
+    svc = ctx.principal.services
+    image = await get_scoped(ctx.db, Image, ctx, image_id)
+    if idempotency_key:
+        existing = (
+            await ctx.db.execute(
+                select(CollectionRun).where(
+                    CollectionRun.investigation_id == ctx.id, CollectionRun.idempotency_key == idempotency_key
+                )
+            )
+        ).scalar_one_or_none()
+        if existing is not None:
+            return await run_out(ctx, existing)
+    gate = images.search_gate(ctx.investigation, image)
+    if not gate.allowed:
+        raise ConflictState(gate.reason, code=gate.code or "search_not_allowed")
+    state, reason = provider_status(svc.settings, body.provider)
+    if state != "ready":
+        raise ConflictState(reason, code=f"provider_{state}")
+    await enforce_rate_limit(svc, f"collect:user:{ctx.principal.user_id}", COLLECTION_USER)
+    await enforce_rate_limit(svc, f"collect:inv:{ctx.id}", COLLECTION_INVESTIGATION)
+    cipher = await ctx.cipher()
+    run_id = new_id()
+    label = images.image_label(image)
+    run = CollectionRun(
+        id=run_id,
+        investigation_id=ctx.id,
+        connector_id=body.provider,
+        input_type="image",
+        query=cipher.seal(f"Image {label} (sanitized preview)", table="collection_runs", column="query", row_id=run_id),
+        status="queued",
+        requested_by=ctx.principal.user_id,
+        origin_image_id=image.id,
+        idempotency_key=idempotency_key,
+    )
+    ctx.db.add(run)
+    await ctx.db.flush()
+    await enqueue(
+        ctx.db,
+        queue=JobQueue.EGRESS,
+        kind="image.public_search",
+        payload={"run_id": str(run.id), "image_id": str(image.id), "investigation_id": str(ctx.id)},
+        investigation_id=ctx.id,
+        created_by=ctx.principal.user_id,
+        idempotency_key=f"run:{run.id}",
+        max_attempts=1,  # paid searches are never repeated automatically
+    )
+    ctx.audit(
+        "image.public_search_requested",
+        target_type="image",
+        target_id=str(image.id),
+        details={
+            "provider": body.provider,
+            "run_id": str(run.id),
+            "faces": image.face_count,
+            "persons": image.person_count,
+            "approved": image.reverse_search_approved_by is not None,
+        },
+    )
+    return await run_out(ctx, run)
 
 
 # --------------------------------------------------------------------------------------------------

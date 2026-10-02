@@ -349,3 +349,37 @@ class DnsRecords(Connector):
                 continue
             out[rtype] = sorted({r.to_text().strip('"')[:300] for r in answer})
         return out
+
+
+class _ImageProvider(Connector):
+    """Catalogue entry for a gated reverse-image provider. It runs only through an image's public-occurrence
+    search (sanitized preview, face/person gate, never in restricted mode), not as a text query."""
+
+    async def search(self, query: ConnectorQuery, ctx: ConnectorContext) -> ConnectorResult:
+        raise ConnectorError("image_search_only", "start this search from an analyzed image")
+
+
+class TinEyeSearch(_ImageProvider):
+    info: ClassVar[ConnectorInfo] = ConnectorInfo(
+        id="tineye",
+        name="TinEye",
+        category=IMG,
+        description="Where else a copy of an image appears on the public web, with first-crawl dates.",
+        input_types=(InputType.IMAGE,),
+        docs_url="https://services.tineye.com/developers/tineyeapi/overview",
+        terms_note="Prepaid search bundles. Only the sanitized preview is sent; matches are reports by TinEye.",
+        requires_key="tineye_api_key",
+    )
+
+
+class GoogleVisionSearch(_ImageProvider):
+    info: ClassVar[ConnectorInfo] = ConnectorInfo(
+        id="google_vision",
+        name="Google Cloud Vision",
+        category=IMG,
+        description="Logos, landmarks and pages with matching images (web detection). Never face features.",
+        input_types=(InputType.IMAGE,),
+        docs_url="https://cloud.google.com/vision/docs/detecting-web",
+        terms_note="Only the sanitized preview is sent. Web entities and best-guess labels are discarded.",
+        requires_key="google_vision_api_key",
+    )

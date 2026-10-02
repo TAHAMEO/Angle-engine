@@ -1,0 +1,41 @@
+[
+  {
+    "method": "POST",
+    "url": "https://vision.googleapis.com/v1/images:annotate",
+    "status": 200,
+    "json": {
+      "responses": [
+        {
+          "logoAnnotations": [
+            {"mid": "/g/demo-logo", "description": "Northwind Coffee Roasters", "score": 0.91,
+             "boundingPoly": {"vertices": [{"x": 60, "y": 60}, {"x": 900, "y": 60}, {"x": 900, "y": 240}, {"x": 60, "y": 240}]}}
+          ],
+          "landmarkAnnotations": [
+            {"mid": "/g/demo-landmark", "description": "Harbour Arch", "score": 0.64,
+             "locations": [{"latLng": {"latitude": 38.70771, "longitude": -9.13651}}]}
+          ],
+          "webDetection": {
+            "webEntities": [
+              {"entityId": "/g/person", "score": 0.7, "description": "Jane Example"},
+              {"entityId": "/g/shop", "score": 0.6, "description": "Coffee shop"}
+            ],
+            "bestGuessLabels": [{"label": "jane example storefront", "languageCode": "en"}],
+            "pagesWithMatchingImages": [
+              {
+                "url": "https://news.example.org/business/northwind-second-roastery",
+                "pageTitle": "<b>Northwind</b> opens a second roastery",
+                "fullMatchingImages": [{"url": "https://img.example.org/2019/northwind-sign.jpg"}]
+              },
+              {
+                "url": "https://blog.example.com/coffee/lisbon-roasters",
+                "pageTitle": "Lisbon roasters to know",
+                "partialMatchingImages": [{"url": "https://blog.example.com/media/collage.jpg"}]
+              }
+            ],
+            "visuallySimilarImages": [{"url": "https://photos.example.com/storefront-42.jpg"}]
+          }
+        }
+      ]
+    }
+  }
+]

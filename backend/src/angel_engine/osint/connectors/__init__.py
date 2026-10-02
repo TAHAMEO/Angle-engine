@@ -3,7 +3,15 @@
 from __future__ import annotations
 
 from angel_engine.osint.connectors.base import Connector, ConnectorContext, ConnectorError
-from angel_engine.osint.connectors.media import BraveSearch, DnsRecords, Nominatim, Openverse, WikimediaCommons
+from angel_engine.osint.connectors.media import (
+    BraveSearch,
+    DnsRecords,
+    GoogleVisionSearch,
+    Nominatim,
+    Openverse,
+    TinEyeSearch,
+    WikimediaCommons,
+)
 from angel_engine.osint.connectors.publications import (
     FederalRegister,
     Gdelt,
@@ -27,7 +35,7 @@ ALL_CONNECTORS: tuple[type[Connector], ...] = (
     GovUk, FederalRegister,
     Rdap, CrtSh, Wikidata, Nominatim,
     HackerNews, StackExchange,
-    WikimediaCommons, Openverse,
+    WikimediaCommons, Openverse, TinEyeSearch, GoogleVisionSearch,
     BraveSearch,
     Wikipedia,
 )  # fmt: skip

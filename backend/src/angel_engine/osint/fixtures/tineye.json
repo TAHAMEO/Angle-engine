@@ -1,0 +1,56 @@
+[
+  {
+    "method": "POST",
+    "url": "https://api.tineye.com/rest/search/",
+    "match": "prefix",
+    "status": 200,
+    "json": {
+      "code": 200,
+      "messages": [],
+      "stats": {"timestamp": "1790000000.00", "query_time": "0.42", "total_filtered_results": 2},
+      "results": {
+        "total_results": 2,
+        "total_backlinks": 3,
+        "matches": [
+          {
+            "image_url": "https://img.example.org/2019/northwind-sign.jpg",
+            "domain": "news.example.org",
+            "score": 71.4,
+            "width": 1600,
+            "height": 1000,
+            "format": "JPEG",
+            "tags": [],
+            "backlinks": [
+              {
+                "url": "https://img.example.org/2019/northwind-sign.jpg",
+                "backlink": "https://news.example.org/business/northwind-second-roastery",
+                "crawl_date": "2019-11-04"
+              }
+            ]
+          },
+          {
+            "image_url": "https://cdn.example.net/lisbon/sign-small.jpg",
+            "domain": "daily.example.net",
+            "score": 55.0,
+            "width": 800,
+            "height": 500,
+            "format": "JPEG",
+            "tags": [],
+            "backlinks": [
+              {
+                "url": "https://cdn.example.net/lisbon/sign-small.jpg",
+                "backlink": "https://daily.example.net/lisbon/northwind-expands",
+                "crawl_date": "2021-03-18"
+              },
+              {
+                "url": "https://cdn.example.net/lisbon/sign-small.jpg",
+                "backlink": "https://daily.example.net/lisbon/coffee-guide",
+                "crawl_date": "2022-07-01"
+              }
+            ]
+          }
+        ]
+      }
+    }
+  }
+]

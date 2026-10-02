@@ -5,6 +5,8 @@
   once and never analyzed.
 * ``image.analyze`` — run the sandboxed pipeline on a clean original and persist the results (evidence,
   findings, graph, timeline, duplicates). Polyglot files found by the pipeline are quarantined and purged.
+* ``image.public_search`` (egress queue) — send the *sanitized preview* to a gated reverse-image provider and
+  store its matches as source-reported evidence. The search gate is re-checked when the job runs.
 """
 
 from __future__ import annotations
@@ -22,12 +24,14 @@ from angel_engine.core.clock import utcnow
 from angel_engine.core.enums import ImageStatus, InvestigationStatus, JobQueue
 from angel_engine.core.ids import new_id
 from angel_engine.crypto.envelope import FieldCipher, KeyDestroyedError
-from angel_engine.db.models import Image, ImageAnalysis, Investigation
+from angel_engine.db.models import CollectionRun, Image, ImageAnalysis, Investigation
 from angel_engine.db.session import set_investigation_scope
 from angel_engine.images import service
+from angel_engine.images.providers import PROVIDERS, ProviderError
 from angel_engine.images.sandbox.runner import SandboxFailed, analyze
 from angel_engine.images.scanning import ScannerUnavailable, ScanVerdict
 from angel_engine.images.types import PipelineResult, StageStatus
+from angel_engine.infra.http.safe_client import CircuitOpen, HttpFetchError, HttpPolicyError
 from angel_engine.jobs.queue import PermanentJobError, enqueue
 from angel_engine.jobs.registry import JobContext, handler
 
@@ -96,9 +100,12 @@ async def _on_last_attempt(
 
 
 async def _guarded(
-    ctx: JobContext, image_id: uuid.UUID, inv_id: uuid.UUID, status: ImageStatus,
+    ctx: JobContext,
+    image_id: uuid.UUID,
+    inv_id: uuid.UUID,
+    status: ImageStatus,
     body: Callable[[], Awaitable[dict[str, Any]]],
-) -> dict[str, Any]:  # fmt: skip
+) -> dict[str, Any]:
     try:
         return await body()
     except PermanentJobError:
@@ -157,8 +164,14 @@ async def _scan(ctx: JobContext, image_id: uuid.UUID, inv_id: uuid.UUID) -> dict
         elif result.verdict == ScanVerdict.INFECTED:
             image.status = ImageStatus.INFECTED.value
             service.purge_original(db, image, "infected_upload")
-            event = _event("image.infected", image, "failure", engine=result.engine, signature=result.signature,
-                           heuristic=result.heuristic)  # fmt: skip
+            event = _event(
+                "image.infected",
+                image,
+                "failure",
+                engine=result.engine,
+                signature=result.signature,
+                heuristic=result.heuristic,
+            )
         else:
             image.status = ImageStatus.SCAN_FAILED.value
             service.purge_original(db, image, "scan_failed")
@@ -236,3 +249,101 @@ async def _analyze(ctx: JobContext, image_id: uuid.UUID, inv_id: uuid.UUID) -> d
             event = _event("image.analyzed", image, counts=counts, faces=image.face_count, persons=image.person_count)
         await append_now(db, svc.audit_key, [event])
     return {"status": image.status}
+
+
+# --------------------------------------------------------------------------------------------------
+# Public-occurrence search (egress queue)
+# --------------------------------------------------------------------------------------------------
+async def _load_run(
+    svc: Services, db: Any, run_id: uuid.UUID, image_id: uuid.UUID, inv_id: uuid.UUID
+) -> tuple[CollectionRun | None, Image | None, Investigation | None, FieldCipher | None]:
+    image, inv, cipher = await _load(svc, db, image_id, inv_id)
+    run = (
+        await db.execute(
+            select(CollectionRun)
+            .where(CollectionRun.id == run_id, CollectionRun.investigation_id == inv_id)
+            .with_for_update()
+        )
+    ).scalar_one_or_none()
+    return run, image, inv, cipher
+
+
+async def _finish_run(
+    svc: Services, run_id: uuid.UUID, image_id: uuid.UUID, inv_id: uuid.UUID, status: str, error: str | None
+) -> dict[str, Any]:
+    async with svc.db.session("worker") as db:
+        run, image, _inv, _ = await _load_run(svc, db, run_id, image_id, inv_id)
+        if run is None or image is None:
+            return {"skipped": "deleted"}
+        run.status, run.error_code, run.finished_at = status, error, utcnow()
+        await append_now(
+            db,
+            svc.audit_key,
+            [_event("image.public_search_completed", image, "failure", provider=run.connector_id, error=error)],
+        )
+    return {"status": status, "error": error}
+
+
+@handler("image.public_search")
+async def public_search(ctx: JobContext, payload: dict[str, Any]) -> dict[str, Any]:
+    svc = ctx.services
+    image_id, inv_id = _ids(payload)
+    try:
+        run_id = uuid.UUID(payload["run_id"])
+    except (KeyError, ValueError) as exc:
+        raise PermanentJobError("invalid payload") from exc
+    async with svc.db.session("worker") as db:
+        run, image, inv, cipher = await _load_run(svc, db, run_id, image_id, inv_id)
+        if run is None or image is None or inv is None or cipher is None:
+            return {"skipped": "missing"}
+        if run.status != "queued":
+            return {"skipped": run.status}
+        if inv.status != InvestigationStatus.ACTIVE.value:
+            run.status, run.error_code, run.finished_at = "cancelled", "investigation_not_active", utcnow()
+            return {"skipped": "investigation_not_active"}
+        gate = service.search_gate(inv, image)  # re-checked at run time
+        provider = PROVIDERS.get(run.connector_id)
+        if not gate.allowed or provider is None or image.preview_key is None:
+            run.status, run.finished_at = "refused", utcnow()
+            run.error_code = gate.code or "unknown_provider"
+            return {"status": "refused", "error": run.error_code}
+        run.status, run.started_at = "running", utcnow()
+        key, file_key = image.preview_key, service.preview_file_key(cipher, image)
+        allow_similar = image.face_count == 0 and image.person_count == 0
+        provider_name, actor_id = provider.name, run.requested_by
+    preview = FieldCipher.decrypt_blob(file_key, await svc.get("storage").get(key), object_key=key)
+    await ctx.progress("searching", provider=provider.id)
+    try:
+        result = await provider.search(preview, svc.get("http"), svc.settings, allow_similar=allow_similar)
+    except ProviderError as exc:
+        return await _finish_run(svc, run_id, image_id, inv_id, "failed", exc.code)
+    except HttpPolicyError:
+        return await _finish_run(svc, run_id, image_id, inv_id, "failed", "blocked_url")
+    except (CircuitOpen, HttpFetchError):
+        return await _finish_run(svc, run_id, image_id, inv_id, "failed", "source_unavailable")
+    await ctx.progress("saving")
+    async with svc.db.session("worker") as db:
+        run, image, inv, cipher = await _load_run(svc, db, run_id, image_id, inv_id)
+        if run is None or image is None or inv is None or cipher is None:
+            return {"skipped": "deleted"}
+        counts = await service.persist_occurrences(
+            db, cipher, inv, image, result, provider_name=provider_name, run_id=run.id, actor_id=actor_id
+        )
+        run.status, run.finished_at = "succeeded", utcnow()
+        run.records_count += counts.get("evidence", 0)
+        run.warnings = list(dict.fromkeys([*run.warnings, *result.warnings]))[:30]
+        await append_now(
+            db,
+            svc.audit_key,
+            [
+                _event(
+                    "image.public_search_completed",
+                    image,
+                    counts=counts,
+                    provider=provider.id,
+                    matches=len(result.matches),
+                    labels=len(result.labels),
+                )
+            ],
+        )
+    return {"status": "succeeded", **counts}

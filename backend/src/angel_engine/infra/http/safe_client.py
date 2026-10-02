@@ -52,7 +52,7 @@ _DENIED_NETWORKS = tuple(
 )  # fmt: skip
 REDIRECT_STATUSES = frozenset({301, 302, 303, 307, 308})
 _FORBIDDEN_HEADERS = frozenset({"cookie", "referer", "host", "proxy-authorization"})
-_CREDENTIAL_HEADERS = frozenset({"authorization", "x-api-key", "x-subscription-token"})
+_CREDENTIAL_HEADERS = frozenset({"authorization", "x-api-key", "x-subscription-token", "x-goog-api-key"})
 _BLOCKED = "blocked: the host resolves to a non-public address"
 RETRY_STATUSES = frozenset({429, 503})
 MAX_RETRY_AFTER_S = 20.0
@@ -353,14 +353,52 @@ class SafeHttpClient:
             )
         raise HttpPolicyError("too many redirects")
 
+    async def post(
+        self,
+        url: str,
+        *,
+        content: bytes,
+        content_type: str,
+        headers: Mapping[str, str] | None = None,
+        max_bytes: int = DEFAULT_MAX_BYTES,
+        min_interval: float = 1.0,
+        accept: str = "application/json",
+    ) -> HttpResult:
+        """POST to an API endpoint (keyed providers). Redirects are refused, never followed."""
+        target = validate_url(url)
+        started = time.monotonic()
+        request_headers = {"Accept": accept, "Content-Type": content_type}
+        request_headers.update({k: v for k, v in (headers or {}).items() if k.lower() not in _FORBIDDEN_HEADERS})
+        status, response_headers, body = await self._fetch_once(
+            target, request_headers, max_bytes, min_interval, method="POST", content=content
+        )
+        if status in REDIRECT_STATUSES:
+            raise HttpPolicyError("API endpoints may not redirect a POST request")
+        return HttpResult(
+            url=str(url),
+            final_url=str(target),
+            status=status,
+            headers=response_headers,
+            content=body,
+            redirects=(),
+            elapsed_ms=int((time.monotonic() - started) * 1000),
+        )
+
     async def _fetch_once(
-        self, url: httpx.URL, headers: dict[str, str], max_bytes: int, min_interval: float
+        self,
+        url: httpx.URL,
+        headers: dict[str, str],
+        max_bytes: int,
+        min_interval: float,
+        *,
+        method: str = "GET",
+        content: bytes | None = None,
     ) -> tuple[int, dict[str, str], bytes]:
         domain = registrable_domain(url.host)
         for attempt in range(2):
             await self.governor.wait_turn(domain, min_interval)
             try:
-                async with self._client.stream("GET", url, headers=headers) as response:
+                async with self._client.stream(method, url, headers=headers, content=content) as response:
                     response_headers = {k.lower(): v for k, v in response.headers.items()}
                     declared = response_headers.get("content-length")
                     if declared and declared.isdigit() and int(declared) > max_bytes:

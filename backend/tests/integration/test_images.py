@@ -4,13 +4,16 @@ duplicates across investigations, clue actions and deletion. All images are synt
 
 from __future__ import annotations
 
+import base64
 import io
+import json
 import uuid
 from typing import Any
 
 import httpx
 import pytest
 from PIL import Image as PILImage
+from pydantic import SecretStr
 from sqlalchemy import select
 
 from angel_engine.db.models import AuditLog, BlobDeletion, Job
@@ -292,3 +295,75 @@ async def test_delete_files_and_everything(client, services):
     remaining = (await client.get(f"{base}/findings")).json()["items"]
     assert remaining and all(f["evidence_removed"] for f in remaining)
     assert not [e for e in (await client.get(f"{base}/timeline-events")).json() if e["kind"] == "capture_time"]
+
+
+async def test_public_occurrence_search_sends_only_the_sanitized_preview(client, services, monkeypatch):
+    _, _, base = await setup(client, services)
+    image = await analyzed(client, services, base, imagegen.storefront())
+    url = f"{base}/images/{image['id']}/public-occurrence-search"
+    resp = await client.post(url, json={"provider": "tineye"}, headers=csrf_headers(client))
+    assert resp.status_code == 409 and resp.json()["code"] == "provider_needs_key"
+    monkeypatch.setattr(services.settings, "tineye_api_key", SecretStr("test-tineye-key"))
+    monkeypatch.setattr(services.settings, "google_vision_api_key", SecretStr("test-vision-key"))
+    transport = services.get("http")._client._transport
+    transport.requests.clear()
+    for provider in ("tineye", "google_vision"):
+        resp = await client.post(url, json={"provider": provider}, headers=csrf_headers(client))
+        assert resp.status_code == 202, resp.text
+        assert resp.json()["status"] == "queued" and resp.json()["input_type"] == "image"
+    await Worker(services, ["egress"]).run_until_idle()
+    runs = (await client.get(f"{base}/collection-runs")).json()
+    assert {r["connector_id"]: r["status"] for r in runs} == {"tineye": "succeeded", "google_vision": "succeeded"}
+
+    preview = (await client.get(f"{base}/images/{image['id']}/preview")).content
+    tineye, vision = (r for r in transport.requests if r.method == "POST")
+    assert tineye.url.host == "api.tineye.com" and tineye.headers["x-api-key"] == "test-tineye-key"
+    assert preview in tineye.content and b"DemoCam" not in tineye.content  # the preview, never the original
+    body = json.loads(vision.content)["requests"][0]
+    assert base64.b64decode(body["image"]["content"]) == preview
+    assert {f["type"] for f in body["features"]} == {"LOGO_DETECTION", "LANDMARK_DETECTION", "WEB_DETECTION"}
+    assert vision.headers["x-goog-api-key"] == "test-vision-key" and "key=" not in str(vision.url)
+
+    rows = (await client.get(f"{base}/findings")).json()["items"]
+    by_statement = {f["statement"]: f for f in rows}
+    reported = by_statement["TinEye reports a matching copy of image I-1 on news.example.org."]
+    assert reported["provenance"] == "source_reported" and reported["verification_status"] == "unverified"
+    logo = by_statement["Google Cloud Vision suggests that image I-1 shows the logo “Northwind Coffee Roasters”."]
+    assert logo["provenance"] == "ai_hypothesis" and logo["verification_status"] == "ai_hypothesis"
+    assert any("visually similar" in s for s in by_statement)  # no faces or people: similar images are kept
+    sources = (await client.get(f"{base}/sources")).json()["items"]
+    news = next(s for s in sources if s["host"] == "news.example.org")
+    assert news["category"] == "public_image_sources" and news["access_status"] == "reference_only"
+    events = (await client.get(f"{base}/timeline-events")).json()
+    first = next(e for e in events if e["kind"] == "first_archived")
+    assert first["occurred_start"].startswith("2019-11-04") and "archived" in (first["caveat"] or "")
+    clues = (await client.get(f"{base}/images/{image['id']}/clues")).json()
+    brand = next(c for c in clues if c["type"] == "brand")
+    assert brand["provenance"] == "ai_hypothesis" and brand["source"] == "provider"
+    assert brand["confidence_basis"].startswith("Google Cloud Vision logo detection score")
+    graph = (await client.get(f"{base}/graph")).json()
+    assert any(e["rel_type"] == "depicts" and e["provenance"] == "ai_hypothesis" for e in graph["edges"])
+    assert any(e["rel_type"] == "hosted_on" for e in graph["edges"])
+    everything = json.dumps([rows, sources, clues, graph, events])
+    assert "Jane Example" not in everything and "jane example" not in everything  # web entities / best guesses
+    assert "38.70771" not in everything  # landmark coordinates are discarded
+
+
+async def test_public_occurrence_search_gate(client, services, monkeypatch):
+    monkeypatch.setattr(services.settings, "tineye_api_key", SecretStr("test-tineye-key"))
+    _, _, base = await setup(client, services)
+    faces = await analyzed(client, services, base, imagegen.storefront(marker=True, with_exif=False))
+    resp = await client.post(
+        f"{base}/images/{faces['id']}/public-occurrence-search",
+        json={"provider": "tineye"},
+        headers=csrf_headers(client),
+    )
+    assert resp.status_code == 409 and resp.json()["code"] == "approval_required"
+    _, _, restricted = await setup(client, services, subject_type="individual")
+    plain = await analyzed(client, services, restricted, imagegen.jpeg(imagegen.pattern(21)))
+    resp = await client.post(
+        f"{restricted}/images/{plain['id']}/public-occurrence-search",
+        json={"provider": "tineye"},
+        headers=csrf_headers(client),
+    )
+    assert resp.status_code == 409 and resp.json()["code"] == "restricted_mode"
