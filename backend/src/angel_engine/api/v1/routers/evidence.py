@@ -28,7 +28,6 @@ from angel_engine.db.models import (
     EvidenceItem,
     Finding,
     FindingEvidence,
-    Relationship,
     RelationshipEvidence,
     Source,
     TimelineEventEvidence,
@@ -383,54 +382,8 @@ async def annotate_evidence(evidence_id: uuid.UUID, body: EvidencePatch, ctx: Wr
 async def delete_evidence(evidence_id: uuid.UUID, ctx: WriteCtx) -> dict[str, Any]:
     """Delete an evidence item. Unsupported graph edges disappear; affected findings are re-checked."""
     item = await get_scoped(ctx.db, EvidenceItem, ctx, evidence_id)
-    cipher = await ctx.cipher()
-    affected = list(
-        (
-            await ctx.db.execute(
-                select(Finding)
-                .join(FindingEvidence, FindingEvidence.finding_id == Finding.id)
-                .where(FindingEvidence.evidence_id == item.id)
-            )
-        )
-        .scalars()
-        .unique()
-    )
-    rel_ids = list(
-        (
-            await ctx.db.execute(
-                select(RelationshipEvidence.relationship_id).where(RelationshipEvidence.evidence_id == item.id)
-            )
-        ).scalars()
-    )
-    await ctx.db.delete(item)
-    await ctx.db.flush()
-    downgraded = orphaned = 0
-    for finding in affected:
-        remaining = (
-            await ctx.db.execute(select(FindingEvidence.id).where(FindingEvidence.finding_id == finding.id).limit(1))
-        ).first()
-        if remaining is None and finding.provenance != "ai_hypothesis":
-            finding.evidence_removed = True
-            orphaned += 1
-        if await findings.recheck(ctx.db, cipher, ctx.investigation, finding):
-            downgraded += 1
-    removed_edges = 0
-    for rel_id in dict.fromkeys(rel_ids):
-        if (await ctx.db.execute(select(Relationship.id).where(Relationship.id == rel_id))).first() is None:
-            removed_edges += 1
-    ctx.audit(
-        "evidence.deleted",
-        target_type="evidence",
-        target_id=str(evidence_id),
-        details={
-            "findings_downgraded": downgraded,
-            "findings_without_evidence": orphaned,
-            "edges_removed": removed_edges,
-        },
-    )
-    return {
-        "status": "deleted",
-        "findings_downgraded": downgraded,
-        "findings_without_evidence": orphaned,
-        "edges_removed": removed_edges,
-    }
+    stats = await findings.delete_evidence(ctx.db, await ctx.cipher(), ctx.investigation, [item])
+    details = stats.as_dict()
+    details.pop("evidence_deleted")
+    ctx.audit("evidence.deleted", target_type="evidence", target_id=str(evidence_id), details=details)
+    return {"status": "deleted", **details}

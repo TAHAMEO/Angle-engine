@@ -43,6 +43,8 @@ from angel_engine.db.models import (
     FindingEvidence,
     FindingStatusHistory,
     Investigation,
+    Relationship,
+    RelationshipEvidence,
     Source,
 )
 from angel_engine.db.session import allow_status_transition
@@ -534,3 +536,71 @@ def confidence_view(cipher: FieldCipher, finding: Finding) -> dict[str, Any] | N
             finding.confidence_basis, table="findings", column="confidence_basis", row_id=finding.id
         ),
     }
+
+
+# --------------------------------------------------------------------------------------------------
+# Evidence deletion
+# --------------------------------------------------------------------------------------------------
+@dataclass(frozen=True, slots=True)
+class EvidenceDeletion:
+    evidence_deleted: int = 0
+    findings_downgraded: int = 0
+    findings_without_evidence: int = 0
+    edges_removed: int = 0
+
+    def as_dict(self) -> dict[str, int]:
+        return {
+            "evidence_deleted": self.evidence_deleted,
+            "findings_downgraded": self.findings_downgraded,
+            "findings_without_evidence": self.findings_without_evidence,
+            "edges_removed": self.edges_removed,
+        }
+
+
+async def delete_evidence(
+    db: AsyncSession, cipher: FieldCipher, inv: Investigation, items: Sequence[EvidenceItem]
+) -> EvidenceDeletion:
+    """Delete evidence items. Graph edges and timeline events lose their support (database triggers remove
+    those left without any); findings are re-checked and flagged when no evidence remains."""
+    if not items:
+        return EvidenceDeletion()
+    ids = [item.id for item in items]
+    affected = list(
+        (
+            await db.execute(
+                select(Finding)
+                .join(FindingEvidence, FindingEvidence.finding_id == Finding.id)
+                .where(FindingEvidence.evidence_id.in_(ids))
+            )
+        )
+        .scalars()
+        .unique()
+    )
+    rel_ids = set(
+        (
+            await db.execute(
+                select(RelationshipEvidence.relationship_id).where(RelationshipEvidence.evidence_id.in_(ids))
+            )
+        )
+        .scalars()
+        .all()
+    )
+    for item in items:
+        await db.delete(item)
+    await db.flush()
+    downgraded = orphaned = 0
+    for finding in affected:
+        remaining = (
+            await db.execute(select(FindingEvidence.id).where(FindingEvidence.finding_id == finding.id).limit(1))
+        ).first()
+        if remaining is None and finding.provenance != Provenance.AI_HYPOTHESIS.value:
+            finding.evidence_removed = True
+            orphaned += 1
+        if await recheck(db, cipher, inv, finding):
+            downgraded += 1
+    surviving = (
+        set((await db.execute(select(Relationship.id).where(Relationship.id.in_(rel_ids)))).scalars().all())
+        if rel_ids
+        else set()
+    )
+    return EvidenceDeletion(len(ids), downgraded, orphaned, len(rel_ids - surviving))

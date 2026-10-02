@@ -107,3 +107,8 @@ async def add_evidence(
     db.add(ev)
     await db.flush()
     return ev
+
+
+async def add_member(services: Services, investigation_id: uuid.UUID, user_id: uuid.UUID, role: str = "editor") -> None:
+    async with services.db.session("app") as db:
+        db.add(InvestigationMember(investigation_id=investigation_id, user_id=user_id, role=role))

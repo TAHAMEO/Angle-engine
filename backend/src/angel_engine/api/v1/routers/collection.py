@@ -113,7 +113,7 @@ def _connector_out(status: ConnectorStatus, ctx: InvCtx | None = None) -> Connec
     return out
 
 
-async def _run_out(ctx: InvCtx, run: CollectionRun) -> RunOut:
+async def run_out(ctx: InvCtx, run: CollectionRun) -> RunOut:
     cipher = await ctx.cipher()
     job = (
         await ctx.db.execute(select(Job.progress).where(Job.idempotency_key == f"run:{run.id}"))
@@ -196,7 +196,7 @@ async def create_collection_run(
             "query_ref": collection.query_fingerprint(cipher, body.query),
         },
     )
-    return await _run_out(ctx, run)
+    return await run_out(ctx, run)
 
 
 @router.get(BASE + "/collection-runs")
@@ -211,13 +211,13 @@ async def list_collection_runs(
     if connector_id:
         stmt = stmt.where(CollectionRun.connector_id == connector_id)
     runs = (await ctx.db.execute(stmt.order_by(CollectionRun.created_at.desc()).limit(100))).scalars().all()
-    return [await _run_out(ctx, r) for r in runs]
+    return [await run_out(ctx, r) for r in runs]
 
 
 @router.get(BASE + "/collection-runs/{run_id}")
 async def get_collection_run(run_id: uuid.UUID, ctx: ReadCtx) -> RunOut:
     run = await get_scoped(ctx.db, CollectionRun, ctx, run_id)
-    return await _run_out(ctx, run)
+    return await run_out(ctx, run)
 
 
 @router.post(BASE + "/collection-runs/{run_id}/cancel")
@@ -232,7 +232,7 @@ async def cancel_collection_run(run_id: uuid.UUID, ctx: WriteCtx) -> RunOut:
         .values(status="cancelled", finished_at=utcnow())
     )
     ctx.audit("collection.cancelled", target_type="collection_run", target_id=str(run.id))
-    return await _run_out(ctx, run)
+    return await run_out(ctx, run)
 
 
 def _require_reviewer(ctx: InvCtx, run: CollectionRun) -> None:
@@ -253,7 +253,7 @@ async def approve_collection_run(run_id: uuid.UUID, ctx: ReadCtx, body: Suggesti
         raise ConflictState("The investigation is not active.", code="investigation_state")
     await collection.queue_run(ctx.db, run, ctx.principal.user_id)
     ctx.audit("collection.approved", target_type="collection_run", target_id=str(run.id))
-    return await _run_out(ctx, run)
+    return await run_out(ctx, run)
 
 
 @router.post(BASE + "/collection-runs/{run_id}/reject")
@@ -262,7 +262,7 @@ async def reject_collection_run(run_id: uuid.UUID, ctx: ReadCtx, body: Suggestio
     _require_reviewer(ctx, run)
     run.status, run.finished_at, run.error_code = "refused", utcnow(), "rejected_by_reviewer"
     ctx.audit("collection.rejected", target_type="collection_run", target_id=str(run.id))
-    return await _run_out(ctx, run)
+    return await run_out(ctx, run)
 
 
 @router.get(BASE + "/collection-runs/{run_id}/leads")
@@ -305,7 +305,7 @@ async def capture_pages(body: CaptureIn, ctx: WriteCtx) -> list[RunOut]:
                 "query_ref": collection.query_fingerprint(cipher, url),
             },
         )
-        runs.append(await _run_out(ctx, run))
+        runs.append(await run_out(ctx, run))
     return runs
 
 

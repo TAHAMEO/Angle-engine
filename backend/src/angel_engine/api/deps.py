@@ -119,11 +119,11 @@ def ip_pseudonym(request: Request) -> str | None:
     return pseudonymize_ip(client_ip(request), svc.keys.ip_key)
 
 
-async def enforce_rate_limit(svc: Services, key: str, limit: Limit) -> None:
+async def enforce_rate_limit(svc: Services, key: str, limit: Limit, cost: int = 1) -> None:
     if not svc.settings.rate_limit_enabled:
         return
     try:
-        allowed, retry_after = await svc.limiter.hit(key, limit)
+        allowed, retry_after = await svc.limiter.hit(key, limit, cost)
     except RateLimiterUnavailable as exc:
         if limit.fail_closed:
             raise ServiceUnavailable("Rate limiting is temporarily unavailable; please retry shortly.") from exc

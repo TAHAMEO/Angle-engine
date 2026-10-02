@@ -43,26 +43,24 @@ def bits(a: int, b: int) -> int:
     return ((a ^ b) & ((1 << 64) - 1)).bit_count()
 
 
-def relation(a: HashResult | dict[str, int | str], b: HashResult | dict[str, int | str]) -> str | None:
+def relation(a: HashResult, b: HashResult) -> str | None:
     """ "identical" | "near_duplicate" | "similar" | None."""
-
-    def get(h: object, key: str) -> object:
-        return h[key] if isinstance(h, dict) else getattr(h, key)
-
-    if get(a, "file_sha256") == get(b, "file_sha256") or get(a, "pixel_sha256") == get(b, "pixel_sha256"):
+    if a.file_sha256 == b.file_sha256 or a.pixel_sha256 == b.pixel_sha256:
         return "identical"
-    p = bits(int(get(a, "phash")), int(get(b, "phash")))  # type: ignore[call-overload]
-    d = bits(int(get(a, "dhash")), int(get(b, "dhash")))  # type: ignore[call-overload]
+    return perceptual_relation(a.phash, a.dhash, a.crop_resistant, b.phash, b.dhash, b.crop_resistant)
+
+
+def perceptual_relation(phash_a: int, dhash_a: int, crop_a: str, phash_b: int, dhash_b: int, crop_b: str) -> str | None:
+    """Near-duplicate / similar from perceptual hashes alone (stored rows keep no raw content hashes)."""
+    p, d = bits(phash_a, phash_b), bits(dhash_a, dhash_b)
     if p <= NEAR_PHASH and d <= NEAR_DHASH:
         return "near_duplicate"
     if p <= SIMILAR_PHASH:
         return "similar"
     try:
-        if _crop_match(str(get(a, "crop_resistant")), str(get(b, "crop_resistant"))):
-            return "similar"
+        return "similar" if _crop_match(crop_a, crop_b) else None
     except (ValueError, TypeError):
         return None
-    return None
 
 
 def _informative(segment: imagehash.ImageHash) -> list[imagehash.ImageHash]:

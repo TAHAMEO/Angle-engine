@@ -97,6 +97,10 @@ class PayloadTooLarge(ProblemError):
     status, slug, title = 413, "payload-too-large", "The upload is too large"
 
 
+class LengthRequired(ProblemError):
+    status, slug, title = 411, "length-required", "A Content-Length header is required"
+
+
 class UnsupportedMedia(ProblemError):
     status, slug, title = 415, "unsupported-media", "This file type is not supported"
 

@@ -34,6 +34,8 @@ CSP_REPORT_IP = Limit(30, 60)
 READS_USER = Limit(300, 60)
 WRITES_USER = Limit(60, 60)
 UPLOADS_USER = Limit(20, 3600, fail_closed=True)
+#: Upload volume per user and day, counted in MiB (use ``cost=``).
+UPLOAD_MIB_USER = Limit(500, 86400, fail_closed=True)
 COLLECTION_USER = Limit(30, 3600, fail_closed=True)
 COLLECTION_INVESTIGATION = Limit(300, 86400, fail_closed=True)
 AI_USER = Limit(30, 3600, fail_closed=True)
@@ -43,8 +45,9 @@ _LUA = """
 local now = tonumber(ARGV[3])
 local interval = tonumber(ARGV[1])
 local burst = tonumber(ARGV[2])
+local cost = tonumber(ARGV[4] or 1)
 local tat = tonumber(redis.call('GET', KEYS[1]) or now)
-local new_tat = math.max(tat, now) + interval
+local new_tat = math.max(tat, now) + interval * cost
 local allow_at = new_tat - burst * interval
 if allow_at > now then
   return {0, math.ceil(allow_at - now)}
@@ -59,7 +62,7 @@ class RateLimiterUnavailable(RuntimeError):
 
 
 class RateLimiter(Protocol):
-    async def hit(self, key: str, limit: Limit) -> tuple[bool, int]: ...
+    async def hit(self, key: str, limit: Limit, cost: int = 1) -> tuple[bool, int]: ...
     async def close(self) -> None: ...
 
 
@@ -68,11 +71,11 @@ class MemoryRateLimiter:
         self._tat: dict[str, float] = {}
         self._lock = asyncio.Lock()
 
-    async def hit(self, key: str, limit: Limit) -> tuple[bool, int]:
+    async def hit(self, key: str, limit: Limit, cost: int = 1) -> tuple[bool, int]:
         now = time.monotonic() * 1000.0
         async with self._lock:
             tat = max(self._tat.get(key, now), now)
-            new_tat = tat + limit.interval_ms
+            new_tat = tat + limit.interval_ms * cost
             allow_at = new_tat - limit.count * limit.interval_ms
             if allow_at > now:
                 return False, math.ceil((allow_at - now) / 1000.0)
@@ -90,10 +93,12 @@ class RedisRateLimiter:
         self._redis = Redis.from_url(url, socket_timeout=0.5, socket_connect_timeout=0.5)
         self._script = self._redis.register_script(_LUA)
 
-    async def hit(self, key: str, limit: Limit) -> tuple[bool, int]:
+    async def hit(self, key: str, limit: Limit, cost: int = 1) -> tuple[bool, int]:
         try:
             now_ms = int(time.time() * 1000)
-            allowed, wait_ms = await self._script(keys=[f"ae:rl:{key}"], args=[limit.interval_ms, limit.count, now_ms])
+            allowed, wait_ms = await self._script(
+                keys=[f"ae:rl:{key}"], args=[limit.interval_ms, limit.count, now_ms, cost]
+            )
         except Exception as exc:
             log.warning("rate_limiter_unavailable", error_type=type(exc).__name__)
             raise RateLimiterUnavailable from exc
