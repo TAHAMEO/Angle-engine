@@ -10,6 +10,7 @@ from sqlalchemy import BigInteger, DateTime, ForeignKeyConstraint, MetaData, Uni
 from sqlalchemy.dialects.postgresql import ARRAY, JSONB
 from sqlalchemy.orm import DeclarativeBase, Mapped, declared_attr, mapped_column
 
+from angel_engine.core.clock import utcnow
 from angel_engine.core.ids import new_id
 
 NAMING_CONVENTION = {
@@ -39,7 +40,9 @@ def created_at_col() -> Mapped[datetime]:
 
 
 def updated_at_col() -> Mapped[datetime]:
-    return mapped_column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)
+    # Python-side onupdate: the new value is known without a round trip (async sessions cannot lazy-load
+    # an attribute expired by a server-side ``onupdate`` expression).
+    return mapped_column(DateTime(timezone=True), server_default=func.now(), onupdate=utcnow, nullable=False)
 
 
 def check_in(column: str, values: tuple[str, ...] | list[str]) -> str:

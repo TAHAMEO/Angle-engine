@@ -24,6 +24,7 @@ from angel_engine.api.deps import (
     require,
     require_recent_reauth,
 )
+from angel_engine.api.v1.routers._common import contains_pattern
 from angel_engine.authz.permissions import Perm, authorize, role_allows
 from angel_engine.core.clock import utcnow
 from angel_engine.core.enums import (
@@ -354,8 +355,10 @@ async def list_investigations(
     if status:
         stmt = stmt.where(Investigation.status.in_([s.value for s in status]))
     if q:
-        like = f"%{q.strip()}%"
-        stmt = stmt.where(or_(Investigation.title.ilike(like), Investigation.public_ref.ilike(like)))
+        like = contains_pattern(q)
+        stmt = stmt.where(
+            or_(Investigation.title.ilike(like, escape="\\"), Investigation.public_ref.ilike(like, escape="\\"))
+        )
     rows = (await db.execute(stmt)).all()
     ids = [inv.id for inv, _ in rows]
     await set_investigation_scope(db, ids)

@@ -81,7 +81,7 @@ class Report(InvestigationScoped, Base):
     created_at: Mapped[datetime] = created_at_col()
     updated_at: Mapped[datetime] = updated_at_col()
 
-    __mapper_args__ = {"version_id_col": version}  # noqa: RUF012
+    __mapper_args__ = {"version_id_col": version, "eager_defaults": True}  # noqa: RUF012
 
 
 class ReportExport(InvestigationScoped, Base):

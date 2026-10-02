@@ -313,7 +313,7 @@ class TransitionRequest:
     independence_attested: bool = False
 
 
-async def _record_status(
+async def record_status(
     db: AsyncSession,
     cipher: FieldCipher,
     finding: Finding,
@@ -399,7 +399,7 @@ async def transition(
             code="independence_attestation_required",
         )
     snapshot = {**result.snapshot, "independence_attested": request.independence_attested}
-    return await _record_status(
+    return await record_status(
         db,
         cipher,
         finding,
@@ -422,7 +422,7 @@ async def recheck(db: AsyncSession, cipher: FieldCipher, inv: Investigation, fin
     result = evaluate(finding, links, restricted_mode=False, actor_role=Role.SUPERVISOR.value, actor_id=None)
     if status not in result.failed:
         return None
-    await _record_status(
+    await record_status(
         db,
         cipher,
         finding,

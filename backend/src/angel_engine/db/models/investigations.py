@@ -84,7 +84,7 @@ class Investigation(Base):
     deleted_at: Mapped[datetime | None]
     purge_after: Mapped[datetime | None]
 
-    __mapper_args__ = {"version_id_col": version}  # noqa: RUF012
+    __mapper_args__ = {"version_id_col": version, "eager_defaults": True}  # noqa: RUF012
 
 
 class InvestigationRefCounter(Base):

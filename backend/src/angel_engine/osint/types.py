@@ -53,8 +53,8 @@ class InputType(StrEnum):
     URL = "url"
     USERNAME = "username"
     ORGANIZATION = "organization"
-    PLACE = "place"            # broad, user-typed place names only
-    IMAGE = "image"            # sanitized preview (reverse-image providers)
+    PLACE = "place"  # broad, user-typed place names only
+    IMAGE = "image"  # sanitized preview (reverse-image providers)
 
 
 class EvidenceType(StrEnum):
@@ -101,9 +101,9 @@ class FactDraft:
 
     entity_canonical: str
     entity_type: str
-    attribute: str              # registry key, e.g. "org.inception", "domain.registration_date"
+    attribute: str  # registry key, e.g. "org.inception", "domain.registration_date"
     value: Any
-    precision: str | None = None   # "day" | "month" | "year" for dates
+    precision: str | None = None  # "day" | "month" | "year" for dates
     valid_from: str | None = None
     valid_to: str | None = None
 
@@ -112,7 +112,7 @@ class FactDraft:
 class RelationshipDraft:
     from_canonical: str
     from_type: str
-    rel_type: str               # allowlisted relationship type
+    rel_type: str  # allowlisted relationship type
     to_canonical: str
     to_type: str
 
@@ -121,10 +121,10 @@ class RelationshipDraft:
 class NormalizedRecord:
     connector_id: str
     category: SourceCategory
-    url: str                          # canonical URL of the public source
+    url: str  # canonical URL of the public source
     title: str
-    excerpt: str                      # the evidence text (quote / registry summary), unredacted
-    statement: str                    # suggested finding statement ("Source X reports …")
+    excerpt: str  # the evidence text (quote / registry summary), unredacted
+    statement: str  # suggested finding statement ("Source X reports …")
     evidence_type: EvidenceType = EvidenceType.TEXT_EXCERPT
     published_at: datetime | None = None
     retrieved_at: datetime | None = None
@@ -136,7 +136,7 @@ class NormalizedRecord:
     facts: tuple[FactDraft, ...] = ()
     relationships: tuple[RelationshipDraft, ...] = ()
     metadata: dict[str, Any] = field(default_factory=dict)
-    is_lead: bool = False             # transient search-engine lead (not persisted unless captured)
+    is_lead: bool = False  # transient search-engine lead (not persisted unless captured)
     organization_context: bool = False
 
 
@@ -166,8 +166,8 @@ class ConnectorInfo:
     input_types: tuple[InputType, ...]
     docs_url: str
     terms_note: str
-    requires_key: str | None = None        # settings attribute holding the key, if any
+    requires_key: str | None = None  # settings attribute holding the key, if any
     key_optional: bool = False
-    person_oriented: bool = False          # username/profile lookups — require a recorded purpose
+    person_oriented: bool = False  # username/profile lookups — require a recorded purpose
     allowed_in_restricted_mode: bool = False
-    min_interval_s: float = 1.0            # politeness: minimum interval between requests per host
+    min_interval_s: float = 1.0  # politeness: minimum interval between requests per host

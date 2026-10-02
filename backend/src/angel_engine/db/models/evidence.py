@@ -227,7 +227,7 @@ class Finding(InvestigationScoped, Base):
     updated_at: Mapped[datetime] = updated_at_col()
     status_changed_at: Mapped[datetime | None]
 
-    __mapper_args__ = {"version_id_col": version}  # noqa: RUF012
+    __mapper_args__ = {"version_id_col": version, "eager_defaults": True}  # noqa: RUF012
 
 
 class FindingEvidence(InvestigationScoped, Base):

@@ -337,6 +337,8 @@ def investigation_scope(perm: Perm) -> Callable[..., Coroutine[Any, Any, InvCtx]
                 principal.event(
                     "investigation.access_denied",
                     outcome="denied",
+                    # Recorded against the investigation (when it exists) so its owners can see attempts.
+                    investigation_id=inv.id if inv is not None else None,
                     target_type="investigation",
                     target_id=str(investigation_id),
                     details={"permission": perm.value},
