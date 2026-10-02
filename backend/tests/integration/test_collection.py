@@ -202,3 +202,12 @@ async def test_restricted_mode_limits_sources_and_requires_approval(client, anon
     done = (await client.get(f"{base}/collection-runs/{run_id}")).json()
     assert done["status"] == "succeeded" and done["records_count"] == 1
     assert user.id
+
+
+async def test_manual_search_links_are_screened(client, services):
+    _, _, base = await setup(client, services)
+    links = (await client.get(f"{base}/manual-search-links", params={"q": ORG})).json()
+    assert {link["provider"] for link in links} >= {"google", "bing", "duckduckgo"}
+    assert all("Northwind+Coffee+Roasters" in link["url"] for link in links if link["provider"] != "wayback")
+    refused = await client.get(f"{base}/manual-search-links", params={"q": "home address of Jane Doe"})
+    assert refused.status_code == 422

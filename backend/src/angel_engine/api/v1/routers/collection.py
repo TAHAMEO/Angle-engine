@@ -388,3 +388,52 @@ async def accept_suggestion(
         "suggestion.accepted", target_type="suggestion", target_id=str(suggestion.id), details={"kind": suggestion.kind}
     )
     return await _suggestion_out(ctx, suggestion)
+
+
+# --------------------------------------------------------------------------------------------------
+# Manual search links (opened by the investigator; never fetched by Angel Engine)
+# --------------------------------------------------------------------------------------------------
+class ManualLink(BaseModel):
+    provider: str
+    label: str
+    url: str
+
+
+MANUAL_SEARCH_PROVIDERS: tuple[tuple[str, str, str], ...] = (
+    ("google", "Google", "https://www.google.com/search?q={q}"),
+    ("bing", "Bing", "https://www.bing.com/search?q={q}"),
+    ("duckduckgo", "DuckDuckGo", "https://duckduckgo.com/?q={q}"),
+    ("brave", "Brave Search", "https://search.brave.com/search?q={q}"),
+    ("google_news", "Google News", "https://news.google.com/search?q={q}"),
+    ("wayback", "Wayback Machine", "https://web.archive.org/web/*/{q}*"),
+)
+
+
+@router.get(BASE + "/manual-search-links")
+async def manual_search_links(ctx: ReadCtx, q: Annotated[str, Query(min_length=2, max_length=300)]) -> list[ManualLink]:
+    """Search links the investigator opens in their own browser (no automated scraping of search engines).
+
+    The query is screened like any collection query; a refusal is recorded and returned as a problem.
+    """
+    from urllib.parse import quote_plus
+
+    from angel_engine.policy.types import PolicyContext, Surface
+    from angel_engine.policy_gate import preflight
+
+    await preflight(
+        ctx.principal.services,
+        ctx.db,
+        ctx.principal.user,
+        q,
+        PolicyContext(
+            surface=Surface.COLLECTION_QUERY,
+            subject_type=ctx.investigation.subject_type,
+            restricted_mode=ctx.investigation.restricted_mode,
+        ),
+        actor_event=ctx.principal.event("", investigation_id=ctx.id),
+    )
+    encoded = quote_plus(q.strip())
+    return [
+        ManualLink(provider=p, label=label, url=template.format(q=encoded))
+        for p, label, template in MANUAL_SEARCH_PROVIDERS
+    ]
