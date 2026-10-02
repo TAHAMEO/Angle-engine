@@ -1,0 +1,21 @@
+[
+ {
+  "url": "https://hn.algolia.com/api/v1/search",
+  "query": {
+   "query": "Northwind Coffee Roasters"
+  },
+  "json": {
+   "hits": [
+    {
+     "objectID": "40000001",
+     "title": "Show HN: Northwind's open-source roast-profile logger",
+     "url": "https://github.com/northwind-coffee/roast-log",
+     "author": "nw_dev",
+     "points": 42,
+     "num_comments": 12,
+     "created_at": "2024-09-10T15:00:00Z"
+    }
+   ]
+  }
+ }
+]

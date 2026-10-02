@@ -1,0 +1,55 @@
+[
+ {
+  "url": "https://commons.wikimedia.org/w/api.php",
+  "query": {
+   "list": "search",
+   "srsearch": "Northwind Coffee Roasters"
+  },
+  "json": {
+   "query": {
+    "search": [
+     {
+      "title": "File:Northwind Coffee Roasters storefront, Lisbon.jpg"
+     }
+    ]
+   }
+  }
+ },
+ {
+  "url": "https://commons.wikimedia.org/w/api.php",
+  "query": {
+   "prop": "imageinfo"
+  },
+  "json": {
+   "query": {
+    "pages": [
+     {
+      "title": "File:Northwind Coffee Roasters storefront, Lisbon.jpg",
+      "imageinfo": [
+       {
+        "url": "https://upload.wikimedia.example/northwind-storefront.jpg",
+        "descriptionurl": "https://commons.wikimedia.org/wiki/File:Northwind_Coffee_Roasters_storefront,_Lisbon.jpg",
+        "sha1": "0123456789abcdef0123456789abcdef01234567",
+        "timestamp": "2024-07-01T10:00:00Z",
+        "extmetadata": {
+         "LicenseShortName": {
+          "value": "CC BY-SA 4.0"
+         },
+         "Artist": {
+          "value": "<a href='//commons.example'>Example Photographer</a>"
+         },
+         "ImageDescription": {
+          "value": "Storefront of Northwind Coffee Roasters with its 'Est. 2016' sign."
+         },
+         "DateTimeOriginal": {
+          "value": "2024-06-14 09:12:33"
+         }
+        }
+       }
+      ]
+     }
+    ]
+   }
+  }
+ }
+]

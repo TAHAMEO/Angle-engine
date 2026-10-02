@@ -1,0 +1,16 @@
+[
+ {
+  "url": "https://api.github.com/users/northwind-coffee",
+  "json": {
+   "login": "northwind-coffee",
+   "type": "Organization",
+   "name": "Northwind Coffee Roasters",
+   "blog": "https://northwind-coffee.example",
+   "location": "Lisbon, Portugal",
+   "email": "dev@northwind-coffee.example",
+   "public_repos": 4,
+   "created_at": "2018-06-01T12:00:00Z",
+   "html_url": "https://github.com/northwind-coffee"
+  }
+ }
+]

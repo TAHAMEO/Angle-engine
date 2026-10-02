@@ -1,0 +1,71 @@
+[
+ {
+  "url": "https://www.wikidata.org/w/api.php",
+  "query": {
+   "action": "wbsearchentities",
+   "search": "Northwind Coffee Roasters"
+  },
+  "json": {
+   "search": [
+    {
+     "id": "Q999000001",
+     "label": "Northwind Coffee Roasters",
+     "description": "coffee roaster in Lisbon"
+    }
+   ]
+  }
+ },
+ {
+  "url": "https://www.wikidata.org/wiki/Special:EntityData/Q999000001.json",
+  "json": {
+   "entities": {
+    "Q999000001": {
+     "labels": {
+      "en": {
+       "value": "Northwind Coffee Roasters"
+      }
+     },
+     "descriptions": {
+      "en": {
+       "value": "coffee roaster in Lisbon, Portugal"
+      }
+     },
+     "claims": {
+      "P31": [
+       {
+        "mainsnak": {
+         "datavalue": {
+          "value": {
+           "id": "Q4830453"
+          }
+         }
+        }
+       }
+      ],
+      "P571": [
+       {
+        "mainsnak": {
+         "datavalue": {
+          "value": {
+           "time": "+2016-00-00T00:00:00Z",
+           "precision": 9
+          }
+         }
+        }
+       }
+      ],
+      "P856": [
+       {
+        "mainsnak": {
+         "datavalue": {
+          "value": "https://northwind-coffee.example/"
+         }
+        }
+       }
+      ]
+     }
+    }
+   }
+  }
+ }
+]

@@ -50,12 +50,13 @@ def install_extras(svc: Services) -> None:
         except ImportError:
             pass
     if "connectors" not in svc.extras:
-        try:
-            from angel_engine.osint.registry import build_registry
+        from angel_engine.infra.http.robots import RobotsPolicy
+        from angel_engine.osint.registry import build_http_client, build_registry
 
-            svc.extras["connectors"] = build_registry(svc.settings)
-        except ImportError:
-            pass
+        svc.extras["connectors"] = build_registry(svc.settings)
+        http = build_http_client(svc.settings)
+        svc.extras["http"] = http
+        svc.extras["robots"] = RobotsPolicy(http)
     if "llm" not in svc.extras:
         try:
             from angel_engine.ai.providers import build_provider

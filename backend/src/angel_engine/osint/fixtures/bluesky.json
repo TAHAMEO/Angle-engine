@@ -1,0 +1,18 @@
+[
+ {
+  "url": "https://public.api.bsky.app/xrpc/app.bsky.actor.getProfile",
+  "query": {
+   "actor": "northwind-coffee.example"
+  },
+  "json": {
+   "did": "did:plc:example",
+   "handle": "northwind-coffee.example",
+   "displayName": "Northwind Coffee Roasters",
+   "description": "Coffee roasted in Lisbon.",
+   "followersCount": 300,
+   "postsCount": 55,
+   "createdAt": "2023-08-15T00:00:00Z",
+   "labels": []
+  }
+ }
+]

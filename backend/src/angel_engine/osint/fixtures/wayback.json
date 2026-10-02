@@ -1,0 +1,34 @@
+[
+ {
+  "url": "https://web.archive.org/cdx/search/cdx",
+  "query": {
+   "url": "northwind-coffee.example"
+  },
+  "json": [
+   [
+    "timestamp",
+    "original",
+    "statuscode",
+    "digest"
+   ],
+   [
+    "20160501083000",
+    "https://northwind-coffee.example/",
+    "200",
+    "AAA111"
+   ],
+   [
+    "20210312101500",
+    "https://northwind-coffee.example/",
+    "200",
+    "BBB222"
+   ],
+   [
+    "20250406070000",
+    "https://northwind-coffee.example/",
+    "200",
+    "CCC333"
+   ]
+  ]
+ }
+]

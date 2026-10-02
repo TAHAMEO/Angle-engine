@@ -5,9 +5,11 @@ Fixture files are JSON lists of entries::
     [{"method": "GET", "url": "https://api.example.org/v1/search?q=northwind", "match": "exact",
       "status": 200, "headers": {"content-type": "application/json"}, "json": {...}}]
 
-``match`` is ``exact`` (scheme, host, path and the *set* of query parameters) or ``prefix``. A body is
-given as ``json``, ``text`` or ``body_file`` (path relative to the fixture file). Unmatched requests get a
-404 with ``x-fixture-missing: 1`` so connectors behave exactly as for an empty live result.
+``match`` is ``exact`` (scheme, host, path and the *set* of query parameters), ``prefix``, or ``params``
+(same scheme, host and path, and every parameter listed under ``query`` present with that value —
+case-insensitive — so fixtures do not depend on incidental parameters such as page sizes). A body is given
+as ``json``, ``text`` or ``body_file`` (path relative to the fixture file). Unmatched requests get a 404
+with ``x-fixture-missing: 1`` so connectors behave exactly as for an empty live result.
 """
 
 from __future__ import annotations
@@ -37,12 +39,21 @@ class FixtureEntry:
     status: int
     headers: dict[str, str]
     body: bytes
+    query: tuple[tuple[str, str], ...] = ()
 
     def matches(self, method: str, url: str) -> bool:
         if method.upper() != self.method:
             return False
         if self.match == "prefix":
             return canonical(url).startswith(self.url)
+        if self.match == "params":
+            parts = urlsplit(url)
+            if urlunsplit((parts.scheme.lower(), parts.netloc.lower(), parts.path or "/", "", "")) != self.url:
+                return False
+            given: dict[str, list[str]] = {}
+            for key, value in parse_qsl(parts.query, keep_blank_values=True):
+                given.setdefault(key, []).append(value.casefold())
+            return all(value.casefold() in given.get(key, []) for key, value in self.query)
         return canonical(url) == self.url
 
 
@@ -59,14 +70,22 @@ def _load_entry(raw: dict[str, Any], base: Path) -> FixtureEntry:
     else:
         body = str(raw.get("text", "")).encode()
         headers.setdefault("content-type", "text/plain; charset=utf-8")
-    url = raw["url"] if raw.get("match") == "prefix" else canonical(raw["url"])
+    match = raw.get("match", "params" if "query" in raw else "exact")
+    if match == "prefix":
+        url = raw["url"]
+    elif match == "params":
+        parts = urlsplit(raw["url"])
+        url = urlunsplit((parts.scheme.lower(), parts.netloc.lower(), parts.path or "/", "", ""))
+    else:
+        url = canonical(raw["url"])
     return FixtureEntry(
         method=raw.get("method", "GET").upper(),
         url=url,
-        match=raw.get("match", "exact"),
+        match=match,
         status=int(raw.get("status", 200)),
         headers=headers,
         body=body,
+        query=tuple((str(k), str(v)) for k, v in raw.get("query", {}).items()),
     )
 
 
@@ -97,9 +116,14 @@ class FixtureTransport(httpx.AsyncBaseTransport):
         text: str | None = None,
         headers: dict[str, str] | None = None,
         method: str = "GET",
-        match: str = "exact",
+        match: str | None = None,
+        query: dict[str, str] | None = None,
     ) -> None:
-        raw: dict[str, Any] = {"method": method, "url": url, "match": match, "status": status, "headers": headers or {}}
+        raw: dict[str, Any] = {"method": method, "url": url, "status": status, "headers": headers or {}}
+        if match:
+            raw["match"] = match
+        if query is not None:
+            raw["query"] = query
         if json_body is not None:
             raw["json"] = json_body
         else:

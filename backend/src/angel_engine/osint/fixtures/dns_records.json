@@ -1,0 +1,18 @@
+{
+ "northwind-coffee.example": {
+  "A": [
+   "192.0.2.10"
+  ],
+  "AAAA": [],
+  "MX": [
+   "10 mail.northwind-coffee.example."
+  ],
+  "NS": [
+   "ns1.example-dns.example.",
+   "ns2.example-dns.example."
+  ],
+  "TXT": [
+   "v=spf1 include:_spf.mail.example ~all"
+  ]
+ }
+}

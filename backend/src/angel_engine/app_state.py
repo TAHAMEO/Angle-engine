@@ -32,6 +32,10 @@ class Services:
         return self.extras.get(name)
 
     async def close(self) -> None:
+        for extra in list(self.extras.values()):
+            closer = getattr(extra, "aclose", None)
+            if closer is not None:
+                await closer()
         await self.limiter.close()
         await self.db.dispose()
 

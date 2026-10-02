@@ -1,0 +1,34 @@
+[
+ {
+  "url": "https://en.wikipedia.org/w/api.php",
+  "query": {
+   "list": "search",
+   "srsearch": "Northwind Coffee Roasters"
+  },
+  "json": {
+   "query": {
+    "search": [
+     {
+      "title": "Northwind Coffee Roasters",
+      "snippet": "coffee roaster in Lisbon"
+     }
+    ]
+   }
+  }
+ },
+ {
+  "url": "https://en.wikipedia.org/api/rest_v1/page/summary/Northwind_Coffee_Roasters",
+  "json": {
+   "type": "standard",
+   "title": "Northwind Coffee Roasters",
+   "revision": "1234567890",
+   "timestamp": "2025-05-01T00:00:00Z",
+   "extract": "Northwind Coffee Roasters is a specialty coffee roaster in Lisbon, Portugal, founded in 2016. It opened a second roastery in 2025.",
+   "content_urls": {
+    "desktop": {
+     "page": "https://en.wikipedia.org/wiki/Northwind_Coffee_Roasters"
+    }
+   }
+  }
+ }
+]

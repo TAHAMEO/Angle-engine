@@ -1,0 +1,12 @@
+[
+ {
+  "url": "https://api.stackexchange.com/2.3/search/advanced",
+  "query": {
+   "q": "Northwind Coffee Roasters"
+  },
+  "json": {
+   "items": [],
+   "quota_remaining": 299
+  }
+ }
+]

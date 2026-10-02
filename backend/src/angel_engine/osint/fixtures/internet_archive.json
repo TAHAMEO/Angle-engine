@@ -1,0 +1,14 @@
+[
+ {
+  "url": "https://archive.org/advancedsearch.php",
+  "query": {
+   "q": "Northwind Coffee Roasters"
+  },
+  "json": {
+   "response": {
+    "docs": [],
+    "numFound": 0
+   }
+  }
+ }
+]

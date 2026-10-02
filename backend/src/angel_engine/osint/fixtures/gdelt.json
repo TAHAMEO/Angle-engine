@@ -1,0 +1,36 @@
+[
+ {
+  "url": "https://api.gdeltproject.org/api/v2/doc/doc",
+  "query": {
+   "query": "\"Northwind Coffee Roasters\""
+  },
+  "json": {
+   "articles": [
+    {
+     "url": "https://news.example.org/business/northwind-second-roastery",
+     "title": "Northwind opens second roastery",
+     "seendate": "20250403T091500Z",
+     "domain": "news.example.org",
+     "language": "English",
+     "sourcecountry": "Portugal"
+    },
+    {
+     "url": "https://wire.example.com/stories/northwind-roastery",
+     "title": "Northwind opens second roastery",
+     "seendate": "20250403T113000Z",
+     "domain": "wire.example.com",
+     "language": "English",
+     "sourcecountry": "United Kingdom"
+    },
+    {
+     "url": "https://daily.example.net/lisbon/northwind-expands",
+     "title": "Lisbon roaster Northwind expands",
+     "seendate": "20250404T121500Z",
+     "domain": "daily.example.net",
+     "language": "English",
+     "sourcecountry": "Portugal"
+    }
+   ]
+  }
+ }
+]

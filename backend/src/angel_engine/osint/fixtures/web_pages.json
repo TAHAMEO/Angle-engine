@@ -1,0 +1,119 @@
+[
+ {
+  "url": "https://northwind-coffee.example/robots.txt",
+  "match": "exact",
+  "status": 200,
+  "headers": {
+   "content-type": "text/plain"
+  },
+  "text": "User-agent: *\nAllow: /\nDisallow: /account/\nCrawl-delay: 1\n"
+ },
+ {
+  "url": "https://news.example.org/robots.txt",
+  "match": "exact",
+  "status": 200,
+  "headers": {
+   "content-type": "text/plain"
+  },
+  "text": "User-agent: *\nAllow: /\n"
+ },
+ {
+  "url": "https://wire.example.com/robots.txt",
+  "match": "exact",
+  "status": 200,
+  "headers": {
+   "content-type": "text/plain"
+  },
+  "text": "User-agent: *\nAllow: /\n"
+ },
+ {
+  "url": "https://daily.example.net/robots.txt",
+  "match": "exact",
+  "status": 200,
+  "headers": {
+   "content-type": "text/plain"
+  },
+  "text": "User-agent: *\nAllow: /\n"
+ },
+ {
+  "url": "https://paywalled.example.org/robots.txt",
+  "match": "exact",
+  "status": 200,
+  "headers": {
+   "content-type": "text/plain"
+  },
+  "text": "User-agent: *\nAllow: /\n"
+ },
+ {
+  "url": "https://members.example.org/robots.txt",
+  "match": "exact",
+  "status": 200,
+  "headers": {
+   "content-type": "text/plain"
+  },
+  "text": "User-agent: *\nAllow: /\n"
+ },
+ {
+  "url": "https://northwind-coffee.example/",
+  "match": "exact",
+  "status": 200,
+  "headers": {
+   "content-type": "text/html; charset=utf-8"
+  },
+  "text": "<!doctype html><html lang=\"en\"><head><meta charset=\"utf-8\"><title>Northwind Coffee Roasters</title><link rel=\"canonical\" href=\"https://northwind-coffee.example/\"></head><body><main><article><h1>Northwind Coffee Roasters</h1><p>Specialty coffee roasted on Harbour Street, Lisbon, since 2016.</p><p>Open daily 7\u201318.</p><p>Wholesale and press enquiries: hello@northwind-coffee.example.</p><p>Follow us at @northwindroasters@mastodon.example.</p></article></main></body></html>"
+ },
+ {
+  "url": "https://northwind-coffee.example/about",
+  "match": "exact",
+  "status": 200,
+  "headers": {
+   "content-type": "text/html; charset=utf-8"
+  },
+  "text": "<!doctype html><html lang=\"en\"><head><meta charset=\"utf-8\"><title>About Northwind</title></head><body><main><article><h1>About Northwind</h1><p>Northwind Coffee Roasters was founded in 2016 by two baristas who wanted to roast lighter, traceable coffee.</p><p>We moved from a weekend market stall into our first shop the same year.</p><p>Every coffee we buy is documented in a public sourcing report.</p></article></main></body></html>"
+ },
+ {
+  "url": "https://news.example.org/business/northwind-second-roastery",
+  "match": "exact",
+  "status": 200,
+  "headers": {
+   "content-type": "text/html; charset=utf-8"
+  },
+  "text": "<!doctype html><html lang=\"en\"><head><meta charset=\"utf-8\"><title>Northwind opens second roastery</title><meta property=\"article:published_time\" content=\"2025-04-03T09:00:00Z\"></head><body><main><article><h1>Northwind opens second roastery</h1><p>Northwind Coffee Roasters, the Lisbon roaster founded in 2016, opened a second roastery near Harbour Street this week, the company said on Tuesday.</p><p>The new site doubles its roasting capacity and adds a training room for local caf\u00e9s.</p><p>Northwind began as a small stall at a weekend market before moving into its first shop, where it still roasts small batches every morning.</p><p>The company now supplies more than sixty caf\u00e9s and restaurants in Portugal and ships beans to customers across Europe.</p><p>A spokesperson said the expansion was funded from revenue and a regional development grant, and that the company plans to publish its sourcing reports for every coffee it buys.</p><p>Industry observers noted that specialty roasters in Lisbon have grown quickly over the past decade as tourism and remote work changed the city's caf\u00e9 culture.</p><p>Northwind's storefront sign, which reads 'Est.</p><p>2016', has become a familiar sight for visitors walking from the riverside.</p><p>The company said it would keep the original shop open daily from seven in the morning until six in the evening, and that the new roastery will host public cupping sessions once a month.</p><p>Asked about competition, the spokesperson said cooperation between roasters had helped the whole sector, pointing to shared green-coffee import contracts and a joint apprenticeship programme with a local vocational school.</p><p>The company did not disclose financial details of the expansion..</p></article></main></body></html>"
+ },
+ {
+  "url": "https://wire.example.com/stories/northwind-roastery",
+  "match": "exact",
+  "status": 200,
+  "headers": {
+   "content-type": "text/html; charset=utf-8"
+  },
+  "text": "<!doctype html><html lang=\"en\"><head><meta charset=\"utf-8\"><title>Northwind opens second roastery</title><script type=\"application/ld+json\">{\"@type\":\"NewsArticle\",\"datePublished\":\"2025-04-03\",\"isBasedOn\":\"https://news.example.org/business/northwind-second-roastery\",\"publisher\":{\"name\":\"Example Wire\"}}</script></head><body><main><article><h1>Northwind opens second roastery</h1><p>Northwind Coffee Roasters, the Lisbon roaster founded in 2016, opened a second roastery near Harbour Street this week, the company said on Tuesday.</p><p>The new site doubles its roasting capacity and adds a training room for local caf\u00e9s.</p><p>Northwind began as a small stall at a weekend market before moving into its first shop, where it still roasts small batches every morning.</p><p>The company now supplies more than sixty caf\u00e9s and restaurants in Portugal and ships beans to customers across Europe.</p><p>A spokesperson said the expansion was funded from revenue and a regional development grant, and that the company plans to publish its sourcing reports for every coffee it buys.</p><p>Industry observers noted that specialty roasters in Lisbon have grown quickly over the past decade as tourism and remote work changed the city's caf\u00e9 culture.</p><p>Northwind's storefront sign, which reads 'Est.</p><p>2016', has become a familiar sight for visitors walking from the riverside.</p><p>The company said it would keep the original shop open daily from seven in the morning until six in the evening, and that the new roastery will host public cupping sessions once a month.</p><p>Asked about competition, the spokesperson said cooperation between roasters had helped the whole sector, pointing to shared green-coffee import contracts and a joint apprenticeship programme with a local vocational school.</p><p>The company did not disclose financial details of the expansion..</p></article></main></body></html>"
+ },
+ {
+  "url": "https://daily.example.net/lisbon/northwind-expands",
+  "match": "exact",
+  "status": 200,
+  "headers": {
+   "content-type": "text/html; charset=utf-8"
+  },
+  "text": "<!doctype html><html lang=\"en\"><head><meta charset=\"utf-8\"><title>Lisbon roaster Northwind expands</title><meta property=\"article:published_time\" content=\"2025-04-04T12:00:00Z\"></head><body><main><article><h1>Lisbon roaster Northwind expands</h1><p>Lisbon roaster Northwind is expanding.</p><p>Northwind Coffee Roasters, founded in 2014, has opened a second roastery, according to the company.</p><p>The roaster, which supplies caf\u00e9s across the city, said the new site would include a training space..</p></article></main></body></html>"
+ },
+ {
+  "url": "https://paywalled.example.org/premium/northwind",
+  "match": "exact",
+  "status": 200,
+  "headers": {
+   "content-type": "text/html; charset=utf-8"
+  },
+  "text": "<!doctype html><html lang=\"en\"><head><meta charset=\"utf-8\"><title>Inside Northwind's expansion</title><script type=\"application/ld+json\">{\"@type\":\"NewsArticle\",\"isAccessibleForFree\":\"False\",\"datePublished\":\"2025-04-05\"}</script></head><body><main><article><h1>Inside Northwind's expansion</h1><p>Subscribe to continue reading.</p></article></main></body></html>"
+ },
+ {
+  "url": "https://members.example.org/northwind",
+  "match": "exact",
+  "status": 401,
+  "headers": {
+   "www-authenticate": "Basic realm=\"members\""
+  },
+  "text": "Sign in required"
+ }
+]

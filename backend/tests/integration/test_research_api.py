@@ -420,16 +420,21 @@ async def test_viewer_members_cannot_write(client, anon_client, services):
 async def test_notes_are_screened_redacted_and_author_owned(client, anon_client, services):
     owner, base = await setup(client, services)
     h = csrf_headers(client)
-    resp = await client.post(f"{base}/notes", json={"body": "Check the 2016 registry filing; ask press@northwind-"
-                                                             "coffee.example or ana.example@gmail.com."}, headers=h)
+    resp = await client.post(
+        f"{base}/notes",
+        json={"body": "Check the 2016 registry filing; ask press@northwind-coffee.example or ana.example@gmail.com."},
+        headers=h,
+    )
     assert resp.status_code == 201, resp.text
     note = resp.json()
     assert "gmail.com" not in note["body"] and note["redaction_counts"].get("email") == 1 and note["is_author"]
-    refused = await client.post(f"{base}/notes", json={"body": "Find her home address and track where she goes."},
-                                headers=h)
+    refused = await client.post(
+        f"{base}/notes", json={"body": "Find her home address and track where she goes."}, headers=h
+    )
     assert refused.status_code == 422 and refused.json()["policy"]["decision"] == "refuse"
-    assert (await client.post(f"{base}/notes", json={"target_type": "finding", "body": "Orphan note."},
-                              headers=h)).status_code == 422
+    assert (
+        await client.post(f"{base}/notes", json={"target_type": "finding", "body": "Orphan note."}, headers=h)
+    ).status_code == 422
     listing = (await client.get(f"{base}/notes")).json()
     assert [n["id"] for n in listing] == [note["id"]]
     found = (await client.get(f"{base}/search", params={"q": "registry"})).json()
@@ -439,8 +444,9 @@ async def test_notes_are_screened_redacted_and_author_owned(client, anon_client,
     await client.post(f"{base}/members", json={"email": editor.email, "role": "editor"}, headers=h)
     await login(anon_client, editor)
     url = f"{base}/notes/{note['id']}"
-    assert (await anon_client.patch(url, json={"body": "Edited by someone else."},
-                                    headers=csrf_headers(anon_client))).status_code == 403
+    assert (
+        await anon_client.patch(url, json={"body": "Edited by someone else."}, headers=csrf_headers(anon_client))
+    ).status_code == 403
     assert (await anon_client.delete(url, headers=csrf_headers(anon_client))).status_code == 403
     assert (await client.delete(url, headers=h)).status_code == 200
     assert owner.id

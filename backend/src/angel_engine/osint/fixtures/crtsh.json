@@ -1,0 +1,23 @@
+[
+ {
+  "url": "https://crt.sh/",
+  "query": {
+   "q": "%.northwind-coffee.example",
+   "output": "json"
+  },
+  "json": [
+   {
+    "issuer_name": "C=US, O=Example CA, CN=Example TLS RSA",
+    "name_value": "northwind-coffee.example\nwww.northwind-coffee.example",
+    "not_before": "2025-01-10T00:00:00",
+    "not_after": "2026-01-10T00:00:00"
+   },
+   {
+    "issuer_name": "C=US, O=Example CA, CN=Example TLS RSA",
+    "name_value": "shop.northwind-coffee.example",
+    "not_before": "2025-03-01T00:00:00",
+    "not_after": "2026-03-01T00:00:00"
+   }
+  ]
+ }
+]

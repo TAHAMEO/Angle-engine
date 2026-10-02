@@ -1,0 +1,38 @@
+[
+ {
+  "url": "https://nominatim.openstreetmap.org/search",
+  "query": {
+   "q": "Lisbon"
+  },
+  "json": [
+   {
+    "osm_type": "relation",
+    "osm_id": 5400890,
+    "addresstype": "city",
+    "type": "city",
+    "name": "Lisbon",
+    "lat": "38.7077",
+    "lon": "-9.1365",
+    "address": {
+     "city": "Lisbon",
+     "state": "Lisbon",
+     "country": "Portugal",
+     "country_code": "pt"
+    }
+   },
+   {
+    "osm_type": "way",
+    "osm_id": 1,
+    "addresstype": "road",
+    "type": "residential",
+    "name": "Lisbon Road",
+    "lat": "51.5",
+    "lon": "-0.1",
+    "address": {
+     "road": "Lisbon Road",
+     "country_code": "gb"
+    }
+   }
+  ]
+ }
+]

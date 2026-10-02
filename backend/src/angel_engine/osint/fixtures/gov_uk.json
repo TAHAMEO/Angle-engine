@@ -1,0 +1,12 @@
+[
+ {
+  "url": "https://www.gov.uk/api/search.json",
+  "query": {
+   "q": "Northwind Coffee Roasters"
+  },
+  "json": {
+   "results": [],
+   "total": 0
+  }
+ }
+]

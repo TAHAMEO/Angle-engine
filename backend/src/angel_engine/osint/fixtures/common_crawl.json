@@ -1,0 +1,22 @@
+[
+ {
+  "url": "https://index.commoncrawl.org/collinfo.json",
+  "json": [
+   {
+    "id": "CC-MAIN-2025-13",
+    "name": "March 2025 Index",
+    "cdx-api": "https://index.commoncrawl.org/CC-MAIN-2025-13-index"
+   }
+  ]
+ },
+ {
+  "url": "https://index.commoncrawl.org/CC-MAIN-2025-13-index",
+  "query": {
+   "url": "https://northwind-coffee.example/"
+  },
+  "headers": {
+   "content-type": "text/plain"
+  },
+  "text": "{\"timestamp\": \"20250318101010\", \"url\": \"https://northwind-coffee.example/\", \"status\": \"200\", \"mime\": \"text/html\", \"digest\": \"CCC333\"}"
+ }
+]

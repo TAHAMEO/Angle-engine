@@ -65,6 +65,7 @@ class Settings(BaseSettings):
     clamd_socket: str | None = None
     face_detector: Literal["yunet", "fixture"] = "yunet"
     image_sandbox: bool = True
+    document_sandbox: bool = True  # parse captured HTML/PDF in a resource-limited child process
     enable_object_detection: bool = True
 
     # --- Object storage ------------------------------------------------------------------------
@@ -132,6 +133,8 @@ class Settings(BaseSettings):
                 problems.append("ANGEL_REDIS_URL is required in production")
             if not self.image_sandbox:
                 problems.append("ANGEL_IMAGE_SANDBOX must be true in production")
+            if not self.document_sandbox:
+                problems.append("ANGEL_DOCUMENT_SANDBOX must be true in production")
             if self.e2e_idle_minutes is not None:
                 problems.append("ANGEL_E2E_IDLE_MINUTES is a test-only setting")
             if problems:

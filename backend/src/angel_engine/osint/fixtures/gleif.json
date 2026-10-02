@@ -1,0 +1,38 @@
+[
+ {
+  "url": "https://api.gleif.org/api/v1/lei-records",
+  "query": {
+   "filter[entity.legalName]": "Northwind Coffee Roasters Lda"
+  },
+  "json": {
+   "data": [
+    {
+     "id": "9845000EXAMPLE0NW016",
+     "attributes": {
+      "lei": "9845000EXAMPLE0NW016",
+      "entity": {
+       "legalName": {
+        "name": "Northwind Coffee Roasters Lda"
+       },
+       "status": "ACTIVE",
+       "jurisdiction": "PT",
+       "creationDate": "2016-03-01T00:00:00Z",
+       "legalAddress": {
+        "addressLines": [
+         "12 Harbour Street"
+        ],
+        "city": "Lisboa",
+        "country": "PT"
+       }
+      },
+      "registration": {
+       "initialRegistrationDate": "2019-05-10T00:00:00Z",
+       "lastUpdateDate": "2025-02-01T00:00:00Z",
+       "status": "ISSUED"
+      }
+     }
+    }
+   ]
+  }
+ }
+]

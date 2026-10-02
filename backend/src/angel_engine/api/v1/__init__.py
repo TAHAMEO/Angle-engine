@@ -9,6 +9,7 @@ from angel_engine.api.v1.routers import (
     admin,
     audit,
     auth,
+    collection,
     dashboard,
     evidence,
     findings,
@@ -30,7 +31,7 @@ def build_router() -> APIRouter:
     api = APIRouter(prefix="/api/v1")
     for module in (
         health, auth, me, legal, admin, audit, abuse, security, policy, search,
-        investigations, dashboard, sources, evidence, findings, graph, timeline, notes,
+        investigations, dashboard, collection, sources, evidence, findings, graph, timeline, notes,
     ):  # fmt: skip
         api.include_router(module.router)
     return api

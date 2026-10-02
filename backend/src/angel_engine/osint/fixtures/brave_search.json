@@ -1,0 +1,29 @@
+[
+ {
+  "url": "https://api.search.brave.com/res/v1/web/search",
+  "query": {
+   "q": "Northwind Coffee Roasters"
+  },
+  "json": {
+   "web": {
+    "results": [
+     {
+      "title": "Northwind Coffee Roasters \u2014 Specialty coffee, Lisbon",
+      "url": "https://northwind-coffee.example/",
+      "description": "Specialty coffee roasted on Harbour Street since 2016."
+     },
+     {
+      "title": "Northwind opens second roastery",
+      "url": "https://news.example.org/business/northwind-second-roastery",
+      "description": "The Lisbon roaster founded in 2016 opened a second roastery."
+     },
+     {
+      "title": "Lisbon roaster Northwind expands",
+      "url": "https://daily.example.net/lisbon/northwind-expands",
+      "description": "Northwind, founded in 2014, has opened a second roastery."
+     }
+    ]
+   }
+  }
+ }
+]

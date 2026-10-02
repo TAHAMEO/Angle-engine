@@ -1,0 +1,23 @@
+[
+ {
+  "url": "https://api.openverse.org/v1/images/",
+  "query": {
+   "q": "Northwind Coffee Roasters"
+  },
+  "json": {
+   "results": [
+    {
+     "id": "ov-1",
+     "title": "Northwind Coffee Roasters storefront, Lisbon",
+     "foreign_landing_url": "https://commons.wikimedia.org/wiki/File:Northwind_Coffee_Roasters_storefront,_Lisbon.jpg",
+     "url": "https://upload.wikimedia.example/northwind-storefront.jpg",
+     "creator": "Example Photographer",
+     "license": "by-sa",
+     "license_version": "4.0",
+     "provider": "wikimedia"
+    }
+   ],
+   "result_count": 1
+  }
+ }
+]

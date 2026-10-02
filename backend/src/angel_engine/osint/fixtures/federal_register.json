@@ -1,0 +1,12 @@
+[
+ {
+  "url": "https://www.federalregister.gov/api/v1/documents.json",
+  "query": {
+   "conditions[term]": "Northwind Coffee Roasters"
+  },
+  "json": {
+   "results": [],
+   "count": 0
+  }
+ }
+]

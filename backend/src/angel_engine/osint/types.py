@@ -150,11 +150,26 @@ class ManualReference:
 
 
 @dataclass(frozen=True, slots=True)
+class RawCapture:
+    """A fetched public page/document, parsed later inside the extraction sandbox (analysis worker)."""
+
+    url: str
+    final_url: str
+    status: int
+    content_type: str | None
+    content: bytes
+    retrieved_at: datetime
+    no_archive: bool = False  # X-Robots-Tag: noarchive — keep only a short excerpt, never the snapshot
+    headers: dict[str, str] = field(default_factory=dict)
+
+
+@dataclass(frozen=True, slots=True)
 class ConnectorResult:
     records: tuple[NormalizedRecord, ...] = ()
     references: tuple[ManualReference, ...] = ()
     warnings: tuple[str, ...] = ()
     partial: bool = False
+    captures: tuple[RawCapture, ...] = ()
 
 
 @dataclass(frozen=True, slots=True)

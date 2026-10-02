@@ -1,0 +1,100 @@
+[
+ {
+  "url": "https://data.iana.org/rdap/dns.json",
+  "json": {
+   "services": [
+    [
+     [
+      "example"
+     ],
+     [
+      "https://rdap.registry.example/"
+     ]
+    ]
+   ]
+  }
+ },
+ {
+  "url": "https://rdap.registry.example/domain/northwind-coffee.example",
+  "json": {
+   "ldhName": "northwind-coffee.example",
+   "status": [
+    "client transfer prohibited"
+   ],
+   "events": [
+    {
+     "eventAction": "registration",
+     "eventDate": "2016-02-14T10:00:00Z"
+    },
+    {
+     "eventAction": "expiration",
+     "eventDate": "2027-02-14T10:00:00Z"
+    },
+    {
+     "eventAction": "last changed",
+     "eventDate": "2025-01-20T08:00:00Z"
+    }
+   ],
+   "nameservers": [
+    {
+     "ldhName": "NS1.EXAMPLE-DNS.EXAMPLE"
+    },
+    {
+     "ldhName": "NS2.EXAMPLE-DNS.EXAMPLE"
+    }
+   ],
+   "entities": [
+    {
+     "roles": [
+      "registrar"
+     ],
+     "vcardArray": [
+      "vcard",
+      [
+       [
+        "fn",
+        {},
+        "text",
+        "Example Registrar Ltd"
+       ]
+      ]
+     ]
+    },
+    {
+     "roles": [
+      "registrant"
+     ],
+     "vcardArray": [
+      "vcard",
+      [
+       [
+        "fn",
+        {},
+        "text",
+        "REDACTED FOR PRIVACY"
+       ],
+       [
+        "org",
+        {},
+        "text",
+        "Northwind Coffee Roasters Lda"
+       ],
+       [
+        "kind",
+        {},
+        "text",
+        "org"
+       ],
+       [
+        "email",
+        {},
+        "text",
+        "owner.private@mail.example"
+       ]
+      ]
+     ]
+    }
+   ]
+  }
+ }
+]

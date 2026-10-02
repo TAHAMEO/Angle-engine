@@ -1,0 +1,35 @@
+[
+ {
+  "url": "https://mastodon.example/api/v1/accounts/lookup",
+  "query": {
+   "acct": "northwindroasters"
+  },
+  "json": {
+   "id": "1",
+   "username": "northwindroasters",
+   "acct": "northwindroasters",
+   "display_name": "Northwind Coffee Roasters",
+   "note": "<p>Specialty coffee roasted in Lisbon since 2016.</p>",
+   "url": "https://mastodon.example/@northwindroasters",
+   "created_at": "2022-11-02T00:00:00Z",
+   "followers_count": 812,
+   "statuses_count": 240,
+   "discoverable": true,
+   "indexable": true
+  }
+ },
+ {
+  "url": "https://mastodon.example/api/v1/accounts/lookup",
+  "query": {
+   "acct": "privatebarista"
+  },
+  "json": {
+   "id": "2",
+   "username": "privatebarista",
+   "acct": "privatebarista",
+   "url": "https://mastodon.example/@privatebarista",
+   "discoverable": false,
+   "indexable": false
+  }
+ }
+]
