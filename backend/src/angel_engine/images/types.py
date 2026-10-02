@@ -67,6 +67,10 @@ class PipelineConfig:
     face_detector: str = "yunet"
     fixture_faces: dict[str, list[Box]] = field(default_factory=dict)
     allow_heif: bool = False
+    #: Individual-subject investigations: no location output at all, stricter text redaction.
+    restricted_mode: bool = False
+    #: Per-investigation key for device fingerprints (serial numbers, owner names are never returned).
+    device_mac_key: bytes = b""
 
 
 @dataclass(frozen=True, slots=True)

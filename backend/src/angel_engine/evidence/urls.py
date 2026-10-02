@@ -69,6 +69,14 @@ def registrable_domain(host: str) -> str:
     return ".".join(labels[-2:]) if len(labels) >= 2 else host
 
 
+def has_public_suffix(host: str) -> bool:
+    """True when ``host`` ends in a known public suffix (or an RFC 2606/6761 reserved name)."""
+    host = host.lower().rstrip(".")
+    if host.rsplit(".", 1)[-1] in RESERVED_SUFFIXES:
+        return True
+    return bool(_extractor()(host).suffix)
+
+
 def _idna_host(host: str) -> str:
     host = host.strip().rstrip(".").lower()
     if not host:
