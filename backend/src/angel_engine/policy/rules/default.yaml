@@ -1,0 +1,845 @@
+# Angel Engine acceptable-use rule pack.
+#
+# Loaded with yaml.safe_load and validated by angel_engine.policy.rulepack. Each rule has:
+#   id         two letters + three digits (FI-001 …), unique
+#   category   an angel_engine.policy.types.Category value
+#   strength   hard (cannot be lowered by the optional classifier) | soft
+#   decision   allow | warn | review | refuse
+#   conditions all / any / none lists of terms. A term is a label string ("intent:track"), or
+#              {labels: [...]}, {phrases: [...]}, {lexicon: name}, {pattern: regex}, or a nested
+#              {all|any|none: [...]} group. Phrases are normalized like the input; "*" matches one token.
+#   rationale  calm, specific, never echoes the request text
+#   notice     optional notice shown with the decision
+#   surfaces   optional list of surfaces the rule is limited to
+#
+# Benign overrides are expressed as `none:` conditions. Labels come from
+# angel_engine.policy.annotate (KNOWN_LABELS); relation labels such as data:contact@person mean the
+# data item is attached to a subject of that kind.
+
+version: "2026.10.0"
+
+lexicons:
+  org_address_overrides:
+    - headquarters
+    - head office
+    - head offices
+    - registered office
+    - registered address
+    - registered agent
+    - business address
+    - office address
+    - corporate address
+    - company address
+    - hq
+    - office of
+    - offices of
+    - constituency office
+    - district office
+    - campaign office
+    - official address
+    - official residence
+    - embassy
+    - consulate
+    - store location
+    - store locations
+    - branch
+    - branches
+    - opening hours
+    - visitor center
+    - visitor centre
+    - venue
+    - sede
+    - sede social
+    - oficinas
+    - siege social
+    - firmensitz
+    - geschaftsadresse
+    - impressum
+    - press office
+  defensive:
+    - redact
+    - redacted
+    - redaction
+    - opt out
+    - opt-out
+    - takedown
+    - take down
+    - remove my
+    - delete my
+    - protect my
+    - protect our
+    - my own
+    - not collected
+    - do not collect
+    - don't collect
+    - was not collected
+    - were not collected
+    - excluded from
+    - withheld
+    - out of scope
+    - am i being
+    - i am being
+    - i'm being
+    - against me
+    - protect myself
+    - report harassment
+    - report stalking
+    - report doxxing
+    - restraining order
+    - stalkerware
+    - safety plan
+  contact_overrides:
+    - press contact
+    - media contact
+    - press office
+    - press team
+    - media relations
+    - press inquiries
+    - press enquiries
+    - customer service
+    - customer support
+    - support line
+    - support team
+    - help desk
+    - helpdesk
+    - helpline
+    - hotline
+    - switchboard
+    - main line
+    - main number
+    - general enquiries
+    - general inquiries
+    - official contact
+    - official email
+    - official phone
+    - contact page
+    - contact form
+    - office phone
+    - office number
+    - office email
+    - business phone
+    - business email
+    - business contact
+    - sales team
+    - investor relations
+    - public contact
+    - constituency office
+    - office of
+  public_schedule:
+    - public appearance
+    - public appearances
+    - public event
+    - public events
+    - public schedule
+    - official schedule
+    - press conference
+    - press conferences
+    - conference
+    - keynote
+    - campaign event
+    - campaign events
+    - rally
+    - hearing
+    - court hearing
+    - parliamentary session
+    - tour dates
+    - concert dates
+    - match schedule
+  monitor_benign:
+    - press release
+    - press releases
+    - news
+    - mentions
+    - brand mentions
+    - coverage
+    - filings
+    - website changes
+    - domain
+    - domains
+    - certificates
+    - dns
+    - prices
+    - product listings
+    - job postings
+    - public statements
+    - official statements
+    - announcements
+  disclosure:
+    - disclose
+    - disclosed
+    - disclosure
+    - disclosures
+    - breach notification
+    - breach notifications
+    - notification letter
+    - public report
+    - public reports
+    - press release
+    - press releases
+    - news
+    - news coverage
+    - coverage of
+    - article
+    - articles
+    - reporting on
+    - reported
+    - regulator filing
+    - sec filing
+    - statement about
+    - announcement
+    - have i been pwned
+    - haveibeenpwned
+    - is my email
+    - was my email
+    - check if my
+  impersonation_detection:
+    - find fake
+    - detect fake
+    - identify fake
+    - report fake
+    - flag fake
+    - spot fake
+    - look for fake
+    - search for fake
+    - accounts impersonating
+    - profiles impersonating
+    - pages impersonating
+    - sites impersonating
+    - websites impersonating
+    - domains impersonating
+    - apps impersonating
+    - impersonation attempts
+    - impersonation scams
+    - impersonation accounts
+    - impersonation campaigns
+    - brand impersonation
+    - report impersonation
+    - detect impersonation
+    - takedown
+    - take down
+    - typosquatting
+    - lookalike domains
+    - counterfeit
+  official_accounts:
+    - official account
+    - official accounts
+    - official page
+    - official profile
+    - official channel
+    - verified account
+    - corporate account
+    - company account
+    - press account
+  public_statements:
+    - official statement
+    - official statements
+    - publicly stated
+    - public statement
+    - public statements
+    - self-described
+    - said publicly
+    - openly stated
+    - in their own words
+    - campaign platform
+    - voting record
+  org_ownership:
+    - who owns this company
+    - who owns the company
+    - who owns this domain
+    - who owns the domain
+    - who owns this website
+    - who owns the website
+    - who runs this company
+    - who runs the company
+    - registrant organization
+    - beneficial owner
+    - beneficial owners
+    - beneficial ownership
+    - company behind
+    - organization behind
+    - organisation behind
+  bypass_targets:
+    - login
+    - log in
+    - sign in
+    - authentication
+    - 2fa
+    - two-factor
+    - two factor
+    - mfa
+    - robots.txt
+    - rate limit
+    - rate limits
+    - rate limiting
+    - terms of service
+    - ip ban
+    - block
+    - blocked
+    - ban
+    - captcha
+    - captchas
+    - account
+    - accounts
+    - password
+    - passwords
+    - encryption
+    - drm
+    - geoblock
+    - geo-block
+    - firewall
+    - servers
+    - server
+  security_research:
+    - how do attackers
+    - how attackers
+    - detect
+    - prevent
+    - protect against
+    - mitigate
+    - defend against
+    - harden
+    - hardening
+  harassment_research:
+    - stalking laws
+    - harassment policy
+    - anti-harassment
+    - harassment training
+    - statistics
+    - research on harassment
+    - studies on
+    - history of
+    - definition of
+  gov_id_overrides:
+    - company registration
+    - company number
+    - registration number of the company
+    - vat number
+    - tax id of the company
+    - employer identification number
+    - ein of
+    - lei
+    - passport office
+    - passport requirements
+
+rules:
+  # ---------------------------------------------------------------- facial identification
+  - id: FI-001
+    category: facial_identification
+    strength: hard
+    decision: refuse
+    conditions:
+      any: [face:biometric]
+    rationale: >-
+      Angel Engine does not perform facial recognition, face matching or any other biometric
+      identification.
+    notice: Angel Engine does not perform facial identification.
+  - id: FI-002
+    category: facial_identification
+    strength: hard
+    decision: refuse
+    conditions:
+      all: [face:identify_person]
+      any: [data:image_ref, ctx:faces, ctx:persons, ctx:surface:image_note]
+    rationale: >-
+      Identifying a person from their appearance in an image is facial identification, which
+      Angel Engine does not perform.
+    notice: Angel Engine does not perform facial identification.
+  - id: FI-003
+    category: facial_identification
+    strength: hard
+    decision: refuse
+    conditions:
+      all: [ctx:faces]
+      any: [face:who_is_this, face:identify_person, face:find_person, face:same_person]
+    rationale: >-
+      The image contains a detected face; asking who the person is or where to find them would
+      require facial identification, which Angel Engine does not perform.
+    notice: Angel Engine does not perform facial identification.
+  - id: FI-004
+    category: facial_identification
+    strength: hard
+    decision: refuse
+    conditions:
+      any: [face:same_person]
+    rationale: >-
+      Deciding whether two images show the same person is face matching, which Angel Engine does
+      not perform.
+    notice: Angel Engine does not perform facial identification.
+
+  # ---------------------------------------------------------------- location tracking
+  - id: LT-001
+    category: location_tracking
+    strength: hard
+    decision: refuse
+    conditions:
+      all: [intent:track]
+      any: [subject:person, subject:public_role, data:location, data:movements]
+      none:
+        - lexicon: public_schedule
+        - lexicon: defensive
+    rationale: >-
+      Tracking or tracing where a specific person is or goes is location tracking, which the
+      Acceptable Use Policy prohibits.
+  - id: LT-002
+    category: location_tracking
+    strength: hard
+    decision: refuse
+    conditions:
+      any: [data:location@person, data:location@relational, data:location@public_role]
+      none:
+        - lexicon: defensive
+    rationale: >-
+      A person's current, real-time or precise location is not something Angel Engine helps to
+      determine.
+  - id: LT-003
+    category: location_tracking
+    strength: hard
+    decision: refuse
+    conditions:
+      any: [data:movements@person, data:movements@relational, data:movements@public_role]
+      none:
+        - lexicon: public_schedule
+        - lexicon: defensive
+    rationale: >-
+      Working out a person's movements, schedule or routine enables stalking and is outside what
+      Angel Engine supports.
+  - id: LT-004
+    category: location_tracking
+    strength: hard
+    decision: refuse
+    conditions:
+      all: [data:image_ref, photo:residence]
+      none:
+        - lexicon: org_address_overrides
+    rationale: >-
+      Pinpointing the home or residence where an image was taken would reveal where someone lives;
+      location analysis is limited to broad, public-level places.
+  - id: LT-005
+    category: location_tracking
+    strength: hard
+    decision: refuse
+    conditions:
+      all: [data:image_ref, photo:exact_spot]
+      any:
+        - ctx:faces
+        - ctx:persons
+        - subject:person
+        - phrases: [selfie, selfies]
+    rationale: >-
+      Determining the exact spot where an image of a person was taken could reveal their
+      whereabouts; location analysis is limited to broad, public-level places.
+
+  # ---------------------------------------------------------------- home address
+  - id: HA-001
+    category: home_address
+    strength: hard
+    decision: refuse
+    conditions:
+      all: [data:home_address]
+      none:
+        - lexicon: org_address_overrides
+        - lexicon: defensive
+        - data:home_address@org
+    rationale: >-
+      Home and residential addresses of individuals are private, so Angel Engine does not search
+      for them.
+  - id: HA-002
+    category: home_address
+    strength: hard
+    decision: refuse
+    conditions:
+      any: [data:address@person, data:address@relational, data:address@public_role]
+      none:
+        - lexicon: org_address_overrides
+        - lexicon: defensive
+    rationale: >-
+      An individual's address is private; only registered business or official office addresses
+      are in scope.
+  - id: HA-003
+    category: home_address
+    strength: hard
+    decision: refuse
+    conditions:
+      all: [data:address, subject:relational]
+      none:
+        - lexicon: org_address_overrides
+        - lexicon: defensive
+    rationale: >-
+      Locating where someone from your personal life lives is outside what Angel Engine supports.
+
+  # ---------------------------------------------------------------- private contact information
+  - id: PC-001
+    category: private_contact_info
+    strength: hard
+    decision: refuse
+    conditions:
+      all: [data:contact]
+      any:
+        - data:contact@person
+        - data:contact@relational
+        - all:
+            - data:contact_personal
+            - none: [data:contact@org]
+      none:
+        - lexicon: contact_overrides
+        - lexicon: defensive
+    rationale: >-
+      Personal phone numbers, e-mail addresses and other private contact details of individuals
+      are not searched for; official public contact channels of organizations are.
+  - id: PC-002
+    category: private_contact_info
+    strength: hard
+    decision: refuse
+    conditions:
+      all: [data:contact, subject:relational]
+      none:
+        - lexicon: contact_overrides
+        - lexicon: defensive
+    rationale: >-
+      Finding the private contact details of someone from your personal life is outside what
+      Angel Engine supports.
+  - id: PC-003
+    category: private_contact_info
+    strength: hard
+    decision: refuse
+    conditions:
+      all: [ctx:restricted, data:contact]
+      any: [data:contact@public_role, subject:person]
+      none:
+        - lexicon: contact_overrides
+    rationale: >-
+      In restricted (individual-subject) investigations, contact details of people are not
+      collected.
+
+  # ---------------------------------------------------------------- private personal data
+  - id: PD-001
+    category: private_personal_data
+    strength: hard
+    decision: refuse
+    conditions:
+      all: [data:personal_details]
+      any:
+        - data:personal_details@person
+        - data:personal_details@relational
+        - data:personal_details@public_role
+      none:
+        - lexicon: defensive
+    rationale: >-
+      Dates of birth, home towns, family members and similar personal details of individuals are
+      private and are not compiled.
+  - id: PD-002
+    category: private_personal_data
+    strength: hard
+    decision: refuse
+    conditions:
+      all: [data:gov_id]
+      any: [subject:person, subject:relational, subject:public_role, intent:find, intent:access]
+      none:
+        - lexicon: gov_id_overrides
+        - lexicon: defensive
+    rationale: >-
+      Government identifiers such as social security, passport or national ID numbers are
+      restricted data and are never searched for.
+  - id: PD-003
+    category: private_personal_data
+    strength: hard
+    decision: refuse
+    conditions:
+      any: [data:medical@person, data:medical@relational, data:medical@public_role]
+      none:
+        - lexicon: defensive
+    rationale: >-
+      Information about a person's health is sensitive personal data and is not researched or
+      inferred.
+
+  # ---------------------------------------------------------------- sensitive attributes
+  - id: SA-001
+    category: sensitive_attribute_inference
+    strength: hard
+    decision: refuse
+    conditions:
+      any:
+        - data:sensitive_attribute@person
+        - data:sensitive_attribute@relational
+        - data:sensitive_attribute@public_role
+        - all: [data:sensitive_attribute, intent:expose]
+      none:
+        - lexicon: public_statements
+    rationale: >-
+      Inferring or revealing a person's sexual orientation, gender identity, religion, ethnicity or
+      immigration status is not permitted, including for public figures.
+  - id: SA-002
+    category: sensitive_attribute_inference
+    strength: hard
+    decision: refuse
+    conditions:
+      any: [data:political_union@person, data:political_union@relational]
+      none:
+        - lexicon: public_statements
+    rationale: >-
+      Inferring a private individual's political opinions or trade-union membership is not
+      permitted.
+
+  # ---------------------------------------------------------------- doxxing
+  - id: DX-001
+    category: doxxing
+    strength: hard
+    decision: refuse
+    conditions:
+      any: [intent:dox]
+      none:
+        - lexicon: defensive
+    rationale: >-
+      Doxxing — compiling and exposing someone's identity or personal details — is prohibited.
+  - id: DX-002
+    category: doxxing
+    strength: hard
+    decision: refuse
+    conditions:
+      all: [data:identity]
+      any: [intent:identify, intent:expose, intent:find, intent:research]
+      none:
+        - lexicon: org_ownership
+        - lexicon: defensive
+        - all:
+            - subject:org
+            - none:
+                - labels: [subject:handle, subject:person]
+    rationale: >-
+      Unmasking the real identity behind an account, pseudonym or anonymous source is doxxing,
+      which Angel Engine does not do.
+  - id: DX-003
+    category: doxxing
+    strength: hard
+    decision: refuse
+    conditions:
+      all: [intent:expose]
+      any: [subject:handle, intent:expose@person, intent:expose@relational]
+      none:
+        - lexicon: defensive
+    rationale: >-
+      Exposing or unmasking a specific person or account holder is doxxing, which Angel Engine
+      does not do.
+  - id: DX-004
+    category: doxxing
+    strength: hard
+    decision: refuse
+    conditions:
+      all: [intent:find, data:accounts]
+      any:
+        - data:accounts@person
+        - data:accounts@relational
+        - intent:find@person
+        - intent:find@relational
+      none:
+        - ctx:subject:individual
+        - lexicon: official_accounts
+        - lexicon: defensive
+    rationale: >-
+      Assembling the online accounts of a private person is a doxxing pattern; it is only possible
+      inside an approved individual-subject investigation.
+
+  # ---------------------------------------------------------------- privacy circumvention
+  - id: PV-001
+    category: privacy_circumvention
+    strength: hard
+    decision: refuse
+    conditions:
+      all: [data:private_access]
+      any: [intent:bypass, intent:access, intent:find]
+      none:
+        - phrases: [archived, wayback, archive.org, public version, publicly available version]
+        - lexicon: defensive
+    rationale: >-
+      Private accounts, paywalls, logins and CAPTCHAs are access controls; Angel Engine only uses
+      content that is publicly available without circumventing them.
+  - id: PV-002
+    category: privacy_circumvention
+    strength: hard
+    decision: refuse
+    conditions:
+      all: [intent:bypass]
+      any:
+        - lexicon: bypass_targets
+      none:
+        - lexicon: security_research
+        - lexicon: defensive
+    rationale: >-
+      Bypassing logins, rate limits, robots.txt or other access controls is not permitted;
+      collection is limited to public, permitted sources.
+
+  # ---------------------------------------------------------------- leaked or restricted data
+  - id: LD-001
+    category: leaked_or_restricted_data
+    strength: hard
+    decision: refuse
+    conditions:
+      all: [data:credentials]
+      any:
+        - data:leak
+        - intent:find
+        - intent:access
+        - intent:bypass
+        - data:credentials@person
+        - data:credentials@org
+        - data:credentials@relational
+      none:
+        - lexicon: disclosure
+        - lexicon: defensive
+    rationale: >-
+      Passwords, credentials and other data from breaches or leaks are restricted; Angel Engine
+      does not search or handle them.
+  - id: LD-002
+    category: leaked_or_restricted_data
+    strength: hard
+    decision: refuse
+    conditions:
+      all: [data:leak]
+      any:
+        - intent:find
+        - intent:access
+        - phrases: [search, query, grep, look up, lookup, browse, download, buy, purchase, access]
+      none:
+        - lexicon: disclosure
+        - lexicon: defensive
+    rationale: >-
+      Breach dumps, leaked databases and paste sites are restricted sources and are not searched.
+
+  # ---------------------------------------------------------------- harassment and stalking
+  - id: HS-001
+    category: harassment_stalking
+    strength: hard
+    decision: refuse
+    conditions:
+      any: [intent:harass, intent:stalk]
+      none:
+        - lexicon: defensive
+        - lexicon: harassment_research
+    rationale: >-
+      Angel Engine cannot be used to harass, threaten, intimidate or stalk anyone.
+  - id: HS-002
+    category: harassment_stalking
+    strength: hard
+    decision: refuse
+    conditions:
+      any:
+        - intent:find@relational
+        - intent:track@relational
+        - intent:monitor@relational
+        - intent:identify@relational
+        - intent:research@relational
+        - intent:access@relational
+        - data:home_address@relational
+        - data:address@relational
+        - data:location@relational
+        - data:movements@relational
+        - data:contact@relational
+        - data:accounts@relational
+        - data:personal_details@relational
+        - data:private_access@relational
+        - data:identity@relational
+      none:
+        - lexicon: defensive
+    rationale: >-
+      Researching, locating or monitoring someone from your personal life (an ex-partner,
+      neighbour, colleague or similar) is outside the lawful purposes Angel Engine supports.
+
+  # ---------------------------------------------------------------- targeted surveillance
+  - id: TS-001
+    category: targeted_surveillance
+    strength: hard
+    decision: refuse
+    conditions:
+      any:
+        - intent:monitor@person
+        - intent:monitor@relational
+        - all: [intent:monitor, subject:relational]
+      none:
+        - lexicon: monitor_benign
+        - lexicon: defensive
+    rationale: >-
+      Continuously monitoring or alerting on a specific person's activity is targeted
+      surveillance, which the Acceptable Use Policy prohibits.
+
+  # ---------------------------------------------------------------- impersonation
+  - id: IM-001
+    category: impersonation
+    strength: hard
+    decision: refuse
+    conditions:
+      all: [intent:impersonate]
+      none:
+        - lexicon: impersonation_detection
+    rationale: >-
+      Creating fake profiles or posing as another person or organization is impersonation, which
+      is prohibited.
+  - id: IM-002
+    category: impersonation
+    strength: hard
+    decision: refuse
+    conditions:
+      all:
+        - intent:impersonate
+        - pattern: >-
+            \b(?:create|creating|make|making|set\s+up|setting\s+up|build|register|open|run|operate|start)\s+(?:a\s+|an\s+|some\s+|multiple\s+|several\s+|my\s+)?(?:new\s+)?(?:fake|sock\s?puppet|burner|bogus|fraudulent|clone)
+    rationale: >-
+      Setting up fake or sock-puppet accounts to pose as someone else is impersonation, which is
+      prohibited.
+
+  # ---------------------------------------------------------------- individual subject (review)
+  - id: IS-001
+    category: individual_subject
+    strength: soft
+    decision: review
+    conditions:
+      all: [intent:research, subject:named]
+    rationale: >-
+      Research focused on a named individual needs supervisor approval and is limited to their
+      publicly documented roles and statements.
+    notice: Investigations focused on an individual require supervisor approval.
+  - id: IS-002
+    category: individual_subject
+    strength: hard
+    decision: review
+    conditions:
+      all: [ctx:surface:investigation_purpose, ctx:subject:individual]
+    rationale: >-
+      Investigations whose subject is an individual require supervisor approval before collection
+      starts.
+    notice: Investigations focused on an individual require supervisor approval.
+  - id: IS-003
+    category: individual_subject
+    strength: soft
+    decision: review
+    conditions:
+      all: [ctx:surface:investigation_purpose, subject:named]
+      any: [intent:research, intent:find, intent:identify]
+    rationale: >-
+      The stated purpose focuses on a named individual, so it needs supervisor approval.
+    notice: Investigations focused on an individual require supervisor approval.
+  - id: IS-004
+    category: individual_subject
+    strength: hard
+    decision: review
+    conditions:
+      all: [ctx:subject:individual, intent:find, data:accounts]
+      any: [data:accounts@person, intent:find@person]
+      none: [subject:relational]
+    rationale: >-
+      Looking up the public accounts of an individual is only possible with supervisor approval in
+      an individual-subject investigation.
+    notice: Investigations focused on an individual require supervisor approval.
+
+  # ---------------------------------------------------------------- broad location (warn)
+  - id: BL-001
+    category: broad_location_only
+    strength: soft
+    decision: warn
+    conditions:
+      any:
+        - photo:where_taken
+        - all: [data:image_ref, photo:exact_spot]
+    rationale: >-
+      Image location analysis is available at a broad, public level (country, city, landmark or
+      venue) only.
+    notice: Location analysis is limited to broad, public-level places.

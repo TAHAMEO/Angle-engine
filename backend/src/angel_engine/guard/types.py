@@ -29,9 +29,9 @@ class SourceKind(StrEnum):
 
     OCR = "ocr"
     WEB = "web"
-    REGISTRY = "registry"          # company registries (GLEIF, SEC, …)
-    GOVERNMENT = "government"      # official government publications
-    METADATA = "metadata"          # EXIF/XMP/IPTC free-text fields
+    REGISTRY = "registry"  # company registries (GLEIF, SEC, …)
+    GOVERNMENT = "government"  # official government publications
+    METADATA = "metadata"  # EXIF/XMP/IPTC free-text fields
     AI_OUTPUT = "ai_output"
     USER_NOTE = "user_note"
     QUERY = "query"
@@ -39,18 +39,22 @@ class SourceKind(StrEnum):
 
 class RedactionKind(StrEnum):
     PAYMENT_CARD = "payment_card"
-    BANK_ACCOUNT = "bank_account"            # IBAN and similar
-    NATIONAL_ID = "national_id"              # SSN, NINO, SIN, …
-    PASSPORT = "passport"                    # passport numbers in context, MRZ lines
-    CREDENTIAL = "credential"                # passwords, API keys, tokens, JWTs, private keys
+    BANK_ACCOUNT = "bank_account"  # IBAN and similar
+    NATIONAL_ID = "national_id"  # SSN, NINO, SIN, …
+    PASSPORT = "passport"  # passport numbers in context, MRZ lines
+    CREDENTIAL = "credential"  # passwords, API keys, tokens, JWTs, private keys
     STREET_ADDRESS = "street_address"
     EMAIL = "email"
     PHONE = "phone"
     DATE_OF_BIRTH = "date_of_birth"
     VEHICLE_PLATE = "vehicle_plate"
     PRECISE_COORDINATES = "precise_coordinates"
-    URL_SECRET = "url_secret"                # userinfo / token query parameters inside URLs
-    WIFI_CREDENTIAL = "wifi_credential"      # WIFI:S:...;P:...; QR payloads
+    URL_SECRET = "url_secret"  # noqa: S105  (userinfo / token query parameters inside URLs)
+    WIFI_CREDENTIAL = "wifi_credential"  # WIFI:S:...;P:...; QR payloads
+    #: Whole sentences about a person's health. Only *redacted* in restricted mode (in standard mode
+    #: the text is kept and flagged with :attr:`SensitivityFlag.MEDICAL`); a span kind is needed so
+    #: OCR box masking also covers those sentences.
+    MEDICAL = "medical"
 
 
 class SensitivityFlag(StrEnum):
@@ -63,7 +67,9 @@ class SensitivityFlag(StrEnum):
 class RedactionContext:
     source_kind: SourceKind = SourceKind.WEB
     #: True when the surrounding record is about an organization (e.g. a registry record or an
-    #: organization's contact page). Enables keeping role mailboxes and registered office addresses.
+    #: organization's contact page). In standard mode it enables keeping toll-free numbers and, for
+    #: registry/government sources, registered office addresses. (Role mailboxes such as info@ are
+    #: kept in standard mode regardless of this flag.)
     organization_context: bool = False
 
 
@@ -79,9 +85,9 @@ class RedactionSpan:
 
 @dataclass(frozen=True, slots=True)
 class RedactionResult:
-    text: str                                   # redacted text, safe to store/display
-    counts: dict[str, int] = field(default_factory=dict)   # RedactionKind value -> count
-    spans: tuple[RedactionSpan, ...] = ()       # offsets into the original input (for OCR box masking)
+    text: str  # redacted text, safe to store/display
+    counts: dict[str, int] = field(default_factory=dict)  # RedactionKind value -> count
+    spans: tuple[RedactionSpan, ...] = ()  # offsets into the original input (for OCR box masking)
     flags: frozenset[SensitivityFlag] = frozenset()
 
     @property

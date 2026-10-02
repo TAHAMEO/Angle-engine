@@ -13,8 +13,8 @@ from enum import StrEnum
 
 class Decision(StrEnum):
     ALLOW = "allow"
-    WARN = "warn"        # allowed, with a notice the user must acknowledge
-    REVIEW = "review"    # requires supervisor approval before it runs
+    WARN = "warn"  # allowed, with a notice the user must acknowledge
+    REVIEW = "review"  # requires supervisor approval before it runs
     REFUSE = "refuse"
 
     @property
@@ -30,7 +30,7 @@ class Category(StrEnum):
     LOCATION_TRACKING = "location_tracking"
     FACIAL_IDENTIFICATION = "facial_identification"
     PRIVATE_CONTACT_INFO = "private_contact_info"
-    PRIVATE_PERSONAL_DATA = "private_personal_data"       # DOB, home town, family, health of a person
+    PRIVATE_PERSONAL_DATA = "private_personal_data"  # DOB, home town, family, health of a person
     HARASSMENT_STALKING = "harassment_stalking"
     DOXXING = "doxxing"
     PRIVACY_CIRCUMVENTION = "privacy_circumvention"
@@ -38,8 +38,8 @@ class Category(StrEnum):
     TARGETED_SURVEILLANCE = "targeted_surveillance"
     SENSITIVE_ATTRIBUTE_INFERENCE = "sensitive_attribute_inference"
     IMPERSONATION = "impersonation"
-    INDIVIDUAL_SUBJECT = "individual_subject"             # review: research focused on a person
-    BROAD_LOCATION_ONLY = "broad_location_only"           # warn: location requests are broad-level only
+    INDIVIDUAL_SUBJECT = "individual_subject"  # review: research focused on a person
+    BROAD_LOCATION_ONLY = "broad_location_only"  # warn: location requests are broad-level only
 
 
 class Surface(StrEnum):
@@ -65,7 +65,7 @@ class PolicyContext:
 
 @dataclass(frozen=True, slots=True)
 class Alternative:
-    kind: str                     # "query" | "connector" | "guidance"
+    kind: str  # "query" | "connector" | "guidance"
     label: str
     template: str | None = None
     connector_id: str | None = None
