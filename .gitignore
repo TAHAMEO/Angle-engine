@@ -1,0 +1,39 @@
+# --- Python ---
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+.mypy_cache/
+.ruff_cache/
+.pytest_cache/
+.coverage
+coverage.xml
+htmlcov/
+dist/
+build/
+
+# --- Node / Next.js ---
+node_modules/
+.next/
+out/
+.turbo/
+*.tsbuildinfo
+next-env.d.ts
+playwright-report/
+test-results/
+blob-report/
+.pnpm-store/
+
+# --- Local runtime state (databases, keys, uploads) ---
+var/
+*.sqlite3
+.env
+.env.*
+!.env.example
+
+# --- Editors / OS ---
+.DS_Store
+.idea/
+.vscode/*
+!.vscode/extensions.json
+*.swp
