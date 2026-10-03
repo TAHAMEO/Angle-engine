@@ -8,6 +8,10 @@ import { defineConfig, devices } from "@playwright/test";
  *
  * E2E_REUSE_SERVERS=1 reuses an API and web server that are already running (for iterating on one spec; the data
  * is then not reset). E2E_SCREENSHOTS=1 saves a screenshot of every page the accessibility scan visits.
+ *
+ * E2E_BASE_URL=https://localhost runs the suite through a TLS proxy in front of both servers, as deployed: Secure
+ * __Host- cookies and a certificate the browser does not trust, e.g. Caddy with deploy/Caddyfile
+ * (ANGEL_DOMAIN=localhost, ANGEL_TLS_DIRECTIVE="tls internal", the host names api and web resolving to 127.0.0.1).
  */
 const BASE_URL = process.env.E2E_BASE_URL ?? "http://localhost:3000";
 const reuse = process.env.E2E_REUSE_SERVERS === "1";
@@ -31,6 +35,8 @@ export default defineConfig<{ theme: "dark" | "light" }>({
     locale: "en-GB",
     timezoneId: "UTC",
     colorScheme: "dark",
+    // Like a person accepting the local certificate authority's warning once.
+    ignoreHTTPSErrors: BASE_URL.startsWith("https://"),
   },
   projects: [
     { name: "setup", testMatch: /auth\.setup\.ts/, use: desktop },
@@ -55,7 +61,7 @@ export default defineConfig<{ theme: "dark" | "light" }>({
     },
     {
       command: "pnpm start",
-      url: `${BASE_URL}/login`,
+      url: "http://localhost:3000/login", // the Next.js server itself, also when E2E_BASE_URL points at a proxy
       timeout: 120_000,
       reuseExistingServer: reuse,
       stdout: "ignore",

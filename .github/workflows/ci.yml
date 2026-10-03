@@ -154,6 +154,21 @@ jobs:
           grep -qi '^strict-transport-security:' <<<"$headers"
           grep -qi "^content-security-policy:.*'nonce-" <<<"$headers"
           grep -qi '^x-frame-options: DENY' <<<"$headers"
+      - name: Sign in through Caddy as a browser does (__Host- cookies, CSRF, Origin, TOTP)
+        run: |
+          jar=$(mktemp); base=https://localhost/api/v1
+          login='{"email":"admin@angel-engine.example","password":"Demo-Harbour-Lantern-2026"}'
+          post() { curl -fsSk -b "$jar" -c "$jar" -H 'Origin: https://localhost' -H 'Content-Type: application/json' "$@"; }
+          form=$(curl -fsSk -b "$jar" -c "$jar" "$base/auth/csrf" | jq -r .csrf_token)
+          post -H "X-CSRF-Token: $form" -d "$login" "$base/auth/login" | jq -e '.state == "mfa_pending"'
+          # Start over from the code step: the unfinished sign-in's cookies must not get in the way.
+          form=$(curl -fsSk -b "$jar" -c "$jar" "$base/auth/csrf" | jq -r .csrf_token)
+          session=$(post -H "X-CSRF-Token: $form" -d "$login" "$base/auth/login" | jq -r .csrf_token)
+          # The next time step's code: the seed may have used the current one, and each step works once.
+          code=$($COMPOSE exec -T api python -c "import pyotp, time; print(pyotp.TOTP('2RK6JLGRP5COXCL7EMU726X3YH6MNOCZ').at(time.time() + 30))")
+          post -H "X-CSRF-Token: $session" -d "{\"code\":\"$code\"}" "$base/auth/mfa/verify" | jq -e '.state == "active"'
+          curl -fsSk -b "$jar" "$base/me" | jq -e '.role == "admin"'
+          grep -q '__Host-ae_sid' "$jar" && grep -q '__Host-ae_form_csrf' "$jar"
       - name: The analysis worker cannot reach the internet
         run: |
           if $COMPOSE exec -T worker-analysis python -c "import socket; socket.create_connection(('1.1.1.1', 443), timeout=5)"; then

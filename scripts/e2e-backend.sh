@@ -22,7 +22,8 @@ API_PORT="${E2E_API_PORT:-8000}"
 url() { printf 'postgresql+asyncpg://%s:%s_dev@127.0.0.1:%s/%s' "$1" "$1" "$PG_PORT" "$DB"; }
 export ANGEL_ENV=development
 export ANGEL_PUBLIC_ORIGIN="${E2E_BASE_URL:-http://localhost:3000}"
-export ANGEL_COOKIE_SECURE=false
+# Secure __Host- cookies when the suite runs over HTTPS (through a TLS proxy, like a real deployment).
+if [[ "$ANGEL_PUBLIC_ORIGIN" == https://* ]]; then export ANGEL_COOKIE_SECURE=true; else export ANGEL_COOKIE_SECURE=false; fi
 export ANGEL_SCANNER=builtin ANGEL_FACE_DETECTOR=fixture ANGEL_CONNECTOR_MODE=fixtures ANGEL_AI_PROVIDER=fake
 export ANGEL_DATABASE_URL="$(url ae_app)" ANGEL_DATABASE_URL_WORKER="$(url ae_worker)"
 export ANGEL_DATABASE_URL_MAINTENANCE="$(url ae_maintenance)" ANGEL_DATABASE_URL_OWNER="$(url ae_owner)"
