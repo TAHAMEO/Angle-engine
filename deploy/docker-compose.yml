@@ -22,7 +22,7 @@ x-backend: &backend
     ANGEL_ENV: production
     ANGEL_SECRETS_DIR: /run/secrets
     ANGEL_PUBLIC_ORIGIN: https://${ANGEL_DOMAIN:?set ANGEL_DOMAIN in deploy/.env}
-    ANGEL_BOT_INFO_URL: https://${ANGEL_DOMAIN}/legal/responsible-use
+    ANGEL_BOT_INFO_URL: ${ANGEL_BOT_INFO_URL:-https://${ANGEL_DOMAIN}/legal/responsible-use}
     ANGEL_CLAMD_HOST: clamav
     ANGEL_CLAMD_PORT: "3310"
     ANGEL_STORAGE_PATH: /var/lib/angel-engine/storage
@@ -171,9 +171,10 @@ services:
     environment:
       ANGEL_DOMAIN: ${ANGEL_DOMAIN}
       ANGEL_TLS_DIRECTIVE: ${ANGEL_TLS_DIRECTIVE:-}
+    # ANGEL_BIND_ADDRESS=127.0.0.1 keeps a workstation installation off the network (default: all interfaces).
     ports:
-      - "80:80"
-      - "443:443"
+      - "${ANGEL_BIND_ADDRESS:+${ANGEL_BIND_ADDRESS}:}80:80"
+      - "${ANGEL_BIND_ADDRESS:+${ANGEL_BIND_ADDRESS}:}443:443"
     volumes:
       - ./Caddyfile:/etc/caddy/Caddyfile:ro
       - caddy_data:/data

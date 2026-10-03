@@ -48,6 +48,10 @@ def create_app(settings: Settings | None = None, services: Services | None = Non
 
         install_extras(svc)
         await sync_legal_documents(svc)
+        if svc.settings.is_production:
+            from angel_engine.demo.safety import refuse_demo_accounts
+
+            await refuse_demo_accounts(svc)
         try:
             yield
         finally:

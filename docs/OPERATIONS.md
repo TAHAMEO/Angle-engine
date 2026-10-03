@@ -60,7 +60,8 @@ from Docker secrets in `/run/secrets` (`ANGEL_SECRETS_DIR`). The important ones:
 |---|---|---|
 | `ANGEL_DOMAIN` (Compose) | — | Public host name; sets `ANGEL_PUBLIC_ORIGIN=https://<domain>` |
 | `ANGEL_OPERATOR_CONTACT` | — | Organizational contact sent to sources that require one (SEC EDGAR) |
-| `ANGEL_BOT_INFO_URL` | `https://<domain>/legal/responsible-use` | Linked from the connector User-Agent |
+| `ANGEL_BIND_ADDRESS` (Compose) | all interfaces | Set `127.0.0.1` on a laptop or workstation so only that machine can reach the platform |
+| `ANGEL_BOT_INFO_URL` | `https://<domain>/legal/responsible-use` | Linked from the connector User-Agent; set a public page when the domain is `localhost` |
 | `ANGEL_ANTHROPIC_API_KEY` | — | Enables the Claude assistant; without it the assistant is shown as unavailable |
 | `ANGEL_AI_MODEL` | `claude-opus-5-5` | |
 | `ANGEL_AI_DAILY_TOKEN_BUDGET_PER_USER` | 2,000,000 | |
@@ -243,6 +244,25 @@ reports (`new` → `triaging` → `actioned` or `dismissed`).
 Accounts that collect repeated refusals are flagged automatically (3 refusals in 7 days: flagged for review; 5:
 every request needs supervisor review; 8: suspended until an administrator clears the flag). Review the person's
 refused requests before clearing a flag.
+
+## From the demo to a real installation
+
+The demo and a real installation use the same Compose project and volumes. The demo's accounts have published
+passwords and TOTP secrets, so remove the demo completely before switching (production mode refuses to start while
+active demo accounts exist):
+
+```bash
+docker compose -f deploy/docker-compose.yml -f deploy/docker-compose.demo.yml down -v
+cp deploy/.env.example deploy/.env      # ANGEL_DOMAIN, ANGEL_OPERATOR_CONTACT, API keys; on a workstation also
+                                        # ANGEL_DOMAIN=localhost and ANGEL_BIND_ADDRESS=127.0.0.1
+make up
+docker compose -f deploy/docker-compose.yml run --rm api angel-engine create-admin --email you@org.example --name "You"
+```
+
+With `ANGEL_DOMAIN=localhost`, Caddy issues a certificate from its own local CA (the browser warns once).
+Administrators cannot read investigations, so also create the people who do the work: request an account at
+`/request-access` and approve it under **Administration → Users** as an investigator, and appoint a supervisor
+(a different person) to approve investigations about individuals.
 
 ## Offline demo
 
