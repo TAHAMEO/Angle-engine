@@ -2403,7 +2403,7 @@ export interface components {
         /** ApproveIn */
         ApproveIn: {
             /** @default investigator */
-            role: components["schemas"]["Role"];
+            role?: components["schemas"]["Role"];
         };
         /** AssistantIn */
         AssistantIn: {
@@ -2411,7 +2411,7 @@ export interface components {
              * Acknowledge Policy Notices
              * @default false
              */
-            acknowledge_policy_notices: boolean;
+            acknowledge_policy_notices?: boolean;
             /** Conclusion */
             conclusion?: string | null;
             /** Evidence Ids */
@@ -2600,22 +2600,22 @@ export interface components {
              * Evidence
              * @default 0
              */
-            evidence: number;
+            evidence?: number;
             /**
              * Findings
              * @default 0
              */
-            findings: number;
+            findings?: number;
             /**
              * Images
              * @default 0
              */
-            images: number;
+            images?: number;
             /**
              * Sources
              * @default 0
              */
-            sources: number;
+            sources?: number;
         };
         /** CustomSection */
         CustomSection: {
@@ -2703,7 +2703,7 @@ export interface components {
              * Terms Current
              * @default true
              */
-            terms_current: boolean;
+            terms_current?: boolean;
             user?: components["schemas"]["UserOut"] | null;
         };
         /** EnrollmentOut */
@@ -2756,7 +2756,7 @@ export interface components {
              * Mention Count
              * @default 0
              */
-            mention_count: number;
+            mention_count?: number;
             /** Mentions */
             mentions: {
                 [key: string]: string;
@@ -2771,7 +2771,7 @@ export interface components {
              * Relationship Count
              * @default 0
              */
-            relationship_count: number;
+            relationship_count?: number;
             /** Relationships */
             relationships: {
                 [key: string]: unknown;
@@ -2802,7 +2802,7 @@ export interface components {
              * Mention Count
              * @default 0
              */
-            mention_count: number;
+            mention_count?: number;
             /** Merged Into Id */
             merged_into_id: string | null;
             /** Name */
@@ -2813,7 +2813,7 @@ export interface components {
              * Relationship Count
              * @default 0
              */
-            relationship_count: number;
+            relationship_count?: number;
             /** Type */
             type: string;
         };
@@ -2835,7 +2835,7 @@ export interface components {
              * @default manual
              * @enum {string}
              */
-            kind: "capture_time" | "publication" | "first_archived" | "registration" | "corporate_event" | "public_statement" | "event" | "manual";
+            kind?: "capture_time" | "publication" | "first_archived" | "registration" | "corporate_event" | "public_statement" | "event" | "manual";
             /** Occurred End */
             occurred_end?: string | null;
             /**
@@ -2848,7 +2848,7 @@ export interface components {
              * @default day
              * @enum {string}
              */
-            precision: "exact" | "minute" | "hour" | "day" | "month" | "year" | "approximate";
+            precision?: "exact" | "minute" | "hour" | "day" | "month" | "year" | "approximate";
             /** Title */
             title: string;
         };
@@ -2871,7 +2871,7 @@ export interface components {
              * Evidence Labels
              * @default []
              */
-            evidence_labels: string[];
+            evidence_labels?: string[];
             /** Finding Id */
             finding_id: string | null;
             /** Finding Label */
@@ -2929,7 +2929,7 @@ export interface components {
              * Excerpt Truncated
              * @default false
              */
-            excerpt_truncated: boolean;
+            excerpt_truncated?: boolean;
             /** Extra */
             extra?: {
                 [key: string]: unknown;
@@ -2985,7 +2985,7 @@ export interface components {
              * Excerpt Truncated
              * @default false
              */
-            excerpt_truncated: boolean;
+            excerpt_truncated?: boolean;
             /** Extra */
             extra?: {
                 [key: string]: unknown;
@@ -3018,7 +3018,7 @@ export interface components {
              * Clear Location
              * @default false
              */
-            clear_location: boolean;
+            clear_location?: boolean;
             /** Country */
             country?: string | null;
             /** Credibility */
@@ -3109,13 +3109,13 @@ export interface components {
              * From External Ai
              * @default false
              */
-            from_external_ai: boolean;
+            from_external_ai?: boolean;
             /**
              * Importance
              * @default normal
              * @enum {string}
              */
-            importance: "key" | "normal";
+            importance?: "key" | "normal";
             /** Links */
             links?: components["schemas"]["LinkIn"][];
             /**
@@ -3123,12 +3123,12 @@ export interface components {
              * @default source_reported
              * @enum {string}
              */
-            provenance: "observed" | "source_reported" | "analyst_inference";
+            provenance?: "observed" | "source_reported" | "analyst_inference";
             /**
              * Sensitive
              * @default false
              */
-            sensitive: boolean;
+            sensitive?: boolean;
             /** Statement */
             statement: string;
         };
@@ -3179,12 +3179,12 @@ export interface components {
              * Clear Confidence
              * @default false
              */
-            clear_confidence: boolean;
+            clear_confidence?: boolean;
             /**
              * Clear Event Time
              * @default false
              */
-            clear_event_time: boolean;
+            clear_event_time?: boolean;
             confidence?: components["schemas"]["Confidence"] | null;
             /** Confidence Basis */
             confidence_basis?: string | null;
@@ -3358,7 +3358,7 @@ export interface components {
              * Progress
              * @default {}
              */
-            progress: {
+            progress?: {
                 [key: string]: unknown;
             };
             /** Quarantine Reason */
@@ -3427,7 +3427,7 @@ export interface components {
              * Progress
              * @default {}
              */
-            progress: {
+            progress?: {
                 [key: string]: unknown;
             };
             /** Quarantine Reason */
@@ -3472,7 +3472,7 @@ export interface components {
              * Insufficient Text
              * @default Insufficient public evidence to establish this conclusion.
              */
-            insufficient_text: string;
+            insufficient_text?: string;
             /** Model */
             model: string | null;
             /** Poll After Ms */
@@ -3499,7 +3499,7 @@ export interface components {
              * Uncited Label
              * @default Uncited AI commentary
              */
-            uncited_label: string;
+            uncited_label?: string;
             /** Validation */
             validation: {
                 [key: string]: unknown;
@@ -3513,7 +3513,7 @@ export interface components {
              * Acknowledge Policy Notices
              * @default false
              */
-            acknowledge_policy_notices: boolean;
+            acknowledge_policy_notices?: boolean;
             attestations: components["schemas"]["AttestationIn"];
             /** Authorization Ref */
             authorization_ref?: string | null;
@@ -3566,7 +3566,7 @@ export interface components {
              * Oversight
              * @default false
              */
-            oversight: boolean;
+            oversight?: boolean;
             /** Owner Name */
             owner_name: string | null;
             /** Permissions */
@@ -3726,7 +3726,7 @@ export interface components {
              * Directly States
              * @default false
              */
-            directly_states: boolean;
+            directly_states?: boolean;
             /**
              * Evidence Id
              * Format: uuid
@@ -3737,7 +3737,7 @@ export interface components {
              * @default supports
              * @enum {string}
              */
-            stance: "supports" | "contradicts" | "context";
+            stance?: "supports" | "contradicts" | "context";
         };
         /** LinkOut */
         LinkOut: {
@@ -3820,12 +3820,12 @@ export interface components {
              * Category
              * @default websites
              */
-            category: string;
+            category?: string;
             /**
              * Directly States
              * @default false
              */
-            directly_states: boolean;
+            directly_states?: boolean;
             /** Excerpt */
             excerpt: string;
             /** Published At */
@@ -3926,7 +3926,7 @@ export interface components {
              * @default investigation
              * @enum {string}
              */
-            target_type: "investigation" | "image" | "finding" | "source" | "entity" | "evidence";
+            target_type?: "investigation" | "image" | "finding" | "source" | "entity" | "evidence";
         };
         /** NoteOut */
         NoteOut: {
@@ -3947,7 +3947,7 @@ export interface components {
              * Redaction Counts
              * @default {}
              */
-            redaction_counts: {
+            redaction_counts?: {
                 [key: string]: number;
             };
             /** Target Id */
@@ -3979,7 +3979,7 @@ export interface components {
              * Hours
              * @default 24
              */
-            hours: number;
+            hours?: number;
             /** Reason */
             reason: string;
         };
@@ -3989,7 +3989,7 @@ export interface components {
              * Has More
              * @default false
              */
-            has_more: boolean;
+            has_more?: boolean;
             /** Items */
             items: components["schemas"]["EntityOut"][];
             /** Next Cursor */
@@ -4001,7 +4001,7 @@ export interface components {
              * Has More
              * @default false
              */
-            has_more: boolean;
+            has_more?: boolean;
             /** Items */
             items: components["schemas"]["EvidenceOut"][];
             /** Next Cursor */
@@ -4013,7 +4013,7 @@ export interface components {
              * Has More
              * @default false
              */
-            has_more: boolean;
+            has_more?: boolean;
             /** Items */
             items: components["schemas"]["FindingRow"][];
             /** Next Cursor */
@@ -4025,7 +4025,7 @@ export interface components {
              * Has More
              * @default false
              */
-            has_more: boolean;
+            has_more?: boolean;
             /** Items */
             items: components["schemas"]["SourceOut"][];
             /** Next Cursor */
@@ -4060,7 +4060,7 @@ export interface components {
              * Acknowledge Policy Notices
              * @default false
              */
-            acknowledge_policy_notices: boolean;
+            acknowledge_policy_notices?: boolean;
             /** Connector Id */
             connector_id: string;
             /** Purpose Note */
@@ -4105,7 +4105,7 @@ export interface components {
              * Categories
              * @default []
              */
-            categories: string[];
+            categories?: string[];
             /** Decision */
             decision: string;
             /** Decision Id */
@@ -4114,12 +4114,12 @@ export interface components {
              * Notices
              * @default []
              */
-            notices: string[];
+            notices?: string[];
             /**
              * Rationale
              * @default
              */
-            rationale: string;
+            rationale?: string;
         };
         /** Preferences */
         Preferences: {
@@ -4136,7 +4136,7 @@ export interface components {
              * @default investigation_purpose
              * @enum {string}
              */
-            surface: "investigation_purpose" | "collection_query" | "assistant_prompt" | "note" | "image_note" | "report_section";
+            surface?: "investigation_purpose" | "collection_query" | "assistant_prompt" | "note" | "image_note" | "report_section";
             /** Text */
             text: string;
         };
@@ -4170,7 +4170,7 @@ export interface components {
              * @default normal
              * @enum {string}
              */
-            importance: "key" | "normal";
+            importance?: "key" | "normal";
             /** Statement */
             statement?: string | null;
         };
@@ -4262,7 +4262,7 @@ export interface components {
              * @default supports
              * @enum {string}
              */
-            stance: "supports" | "contradicts" | "context";
+            stance?: "supports" | "contradicts" | "context";
             /**
              * To Entity Id
              * Format: uuid
@@ -4278,7 +4278,7 @@ export interface components {
              * @default supports
              * @enum {string}
              */
-            stance: "supports" | "contradicts" | "context";
+            stance?: "supports" | "contradicts" | "context";
         };
         /** RelationshipTransitionIn */
         RelationshipTransitionIn: {
@@ -4288,7 +4288,7 @@ export interface components {
              * Independence Attested
              * @default false
              */
-            independence_attested: boolean;
+            independence_attested?: boolean;
             /** Justification */
             justification: string;
             to_status: components["schemas"]["VerificationStatus"];
@@ -4304,7 +4304,7 @@ export interface components {
              * Acknowledge Policy Notices
              * @default false
              */
-            acknowledge_policy_notices: boolean;
+            acknowledge_policy_notices?: boolean;
             /** Custom Sections */
             custom_sections?: components["schemas"]["CustomSection"][];
             options?: components["schemas"]["ReportOptions"];
@@ -4375,7 +4375,7 @@ export interface components {
              * Acknowledge Policy Notices
              * @default false
              */
-            acknowledge_policy_notices: boolean;
+            acknowledge_policy_notices?: boolean;
             /** Custom Sections */
             custom_sections?: components["schemas"]["CustomSection"][] | null;
             options?: components["schemas"]["ReportOptions"] | null;
@@ -4514,7 +4514,7 @@ export interface components {
              * Acknowledge Policy Notices
              * @default false
              */
-            acknowledge_policy_notices: boolean;
+            acknowledge_policy_notices?: boolean;
             /** Connector Id */
             connector_id: string;
             /**
@@ -4562,7 +4562,7 @@ export interface components {
              * Progress
              * @default {}
              */
-            progress: {
+            progress?: {
                 [key: string]: unknown;
             };
             /** Query */
@@ -4676,7 +4676,7 @@ export interface components {
              * Terms Current
              * @default true
              */
-            terms_current: boolean;
+            terms_current?: boolean;
             user?: components["schemas"]["UserOut"] | null;
         };
         /** SimilarOut */
@@ -4703,7 +4703,7 @@ export interface components {
              * Evidence Count
              * @default 0
              */
-            evidence_count: number;
+            evidence_count?: number;
             /**
              * First Captured At
              * Format: date-time
@@ -4768,7 +4768,7 @@ export interface components {
              * Evidence Count
              * @default 0
              */
-            evidence_count: number;
+            evidence_count?: number;
             /**
              * First Captured At
              * Format: date-time
@@ -4806,7 +4806,7 @@ export interface components {
              * Clear Reliability
              * @default false
              */
-            clear_reliability: boolean;
+            clear_reliability?: boolean;
             /** Ownership Group */
             ownership_group?: string | null;
             /** Publisher */
@@ -4882,7 +4882,7 @@ export interface components {
              * Acknowledge Policy Notices
              * @default false
              */
-            acknowledge_policy_notices: boolean;
+            acknowledge_policy_notices?: boolean;
         };
         /** SuggestionDecision */
         SuggestionDecision: {
@@ -4942,7 +4942,7 @@ export interface components {
              * Independence Attested
              * @default false
              */
-            independence_attested: boolean;
+            independence_attested?: boolean;
             /** Justification */
             justification: string;
             to_status: components["schemas"]["VerificationStatus"];
@@ -4983,7 +4983,7 @@ export interface components {
              * Duplicate
              * @default false
              */
-            duplicate: boolean;
+            duplicate?: boolean;
             /** Face Count */
             face_count: number;
             /** Filename */
@@ -5016,7 +5016,7 @@ export interface components {
              * Progress
              * @default {}
              */
-            progress: {
+            progress?: {
                 [key: string]: unknown;
             };
             /** Quarantine Reason */
@@ -5033,7 +5033,7 @@ export interface components {
              * Upload Notice
              * @default Upload only images you are legally authorized to investigate. Angel Engine does not perform facial identification.
              */
-            upload_notice: string;
+            upload_notice?: string;
             /** Uploaded By Me */
             uploaded_by_me: boolean;
             /** Width */

@@ -3,8 +3,8 @@
 export interface PolicyAlternative {
   kind: string;
   label: string;
-  template?: string;
-  connector_id?: string;
+  template?: string | null;
+  connector_id?: string | null;
 }
 
 export interface PolicyPayload {
