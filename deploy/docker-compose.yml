@@ -1,0 +1,225 @@
+# Angel Engine — single-organization deployment.
+#
+#   cp deploy/.env.example deploy/.env      # set ANGEL_DOMAIN and optional API keys
+#   deploy/generate-secrets.sh              # database/redis passwords and connection URLs (deploy/secrets/)
+#   docker compose -f deploy/docker-compose.yml up -d --build
+#   docker compose -f deploy/docker-compose.yml run --rm api angel-engine create-admin --email … --name …
+#
+# Network layout: only Caddy is reachable from outside. The API and web server sit on internal networks; the
+# analysis worker (which parses untrusted files) has no internet access at all; only the egress worker (connectors,
+# vision providers, Claude) and ClamAV's signature updater can reach the internet.
+name: angel-engine
+
+x-backend: &backend
+  image: angel-engine-backend:${ANGEL_VERSION:-local}
+  build:
+    context: ..
+    dockerfile: deploy/backend.Dockerfile
+  env_file:
+    - path: .env
+      required: false
+  environment: &backend-env
+    ANGEL_ENV: production
+    ANGEL_SECRETS_DIR: /run/secrets
+    ANGEL_PUBLIC_ORIGIN: https://${ANGEL_DOMAIN:?set ANGEL_DOMAIN in deploy/.env}
+    ANGEL_BOT_INFO_URL: https://${ANGEL_DOMAIN}/legal/responsible-use
+    ANGEL_CLAMD_HOST: clamav
+    ANGEL_CLAMD_PORT: "3310"
+    ANGEL_STORAGE_PATH: /var/lib/angel-engine/storage
+    ANGEL_KEYRING_PATH: /var/lib/angel-engine/keys/keyring.json
+    ANGEL_LOG_JSON: "true"
+  secrets:
+    - angel_database_url
+    - angel_database_url_worker
+    - angel_database_url_maintenance
+    - angel_database_url_owner
+    - angel_redis_url
+  volumes:
+    - storage:/var/lib/angel-engine/storage
+    - keys:/var/lib/angel-engine/keys
+  read_only: true
+  tmpfs:
+    - /tmp:size=512m,mode=1777
+  cap_drop: [ALL]
+  security_opt: [no-new-privileges:true]
+  restart: unless-stopped
+
+services:
+  postgres:
+    image: postgres:16-bookworm
+    environment:
+      POSTGRES_PASSWORD_FILE: /run/secrets/postgres_password
+      POSTGRES_INITDB_ARGS: --auth-host=scram-sha-256
+    secrets: [postgres_password, db_owner_password, db_app_password, db_worker_password, db_maintenance_password]
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./postgres/init-roles.sh:/docker-entrypoint-initdb.d/10-init-roles.sh:ro
+    networks: [backend]
+    shm_size: 256m
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d angel_engine"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+    restart: unless-stopped
+
+  redis:
+    image: redis:7-alpine
+    # Rate-limit counters only: no persistence. The password comes from a secret.
+    command: ["sh", "-c", 'exec redis-server --requirepass "$$(cat /run/secrets/redis_password)" --save "" --appendonly no']
+    secrets: [redis_password]
+    networks: [backend]
+    read_only: true
+    tmpfs: [/data]
+    healthcheck:
+      test: ["CMD-SHELL", 'redis-cli -a "$$(cat /run/secrets/redis_password)" --no-auth-warning ping | grep -q PONG']
+      interval: 5s
+      timeout: 3s
+      retries: 30
+    restart: unless-stopped
+
+  clamav:
+    # Pin by digest in production (docker buildx imagetools inspect clamav/clamav:1.5).
+    image: clamav/clamav:1.5
+    volumes:
+      - ./clamd.conf:/etc/clamav/clamd.conf:ro
+      - clamdb:/var/lib/clamav
+    networks: [backend, egress]
+    healthcheck:
+      test: ["CMD", "clamdcheck.sh"]
+      interval: 60s
+      timeout: 10s
+      retries: 5
+      start_period: 300s
+    restart: unless-stopped
+
+  keys-init:
+    <<: *backend
+    command: ["angel-engine", "keys", "init"]
+    network_mode: none
+    restart: "no"
+
+  migrate:
+    <<: *backend
+    command: ["alembic", "upgrade", "head"]
+    networks: [backend]
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: "no"
+
+  api:
+    <<: *backend
+    networks: [frontend, backend]
+    depends_on:
+      keys-init:
+        condition: service_completed_successfully
+      migrate:
+        condition: service_completed_successfully
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test:
+        - CMD
+        - python
+        - -c
+        - "import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://127.0.0.1:8000/api/v1/health/live', timeout=3).status == 200 else 1)"
+      interval: 15s
+      timeout: 5s
+      retries: 5
+
+  worker-analysis:
+    <<: *backend
+    # Parses untrusted uploads and pages in a resource-limited sandbox: no route to the internet.
+    command: ["python", "-m", "angel_engine.worker", "--queues", "analysis,maintenance"]
+    networks: [backend]
+    depends_on:
+      keys-init:
+        condition: service_completed_successfully
+      migrate:
+        condition: service_completed_successfully
+      clamav:
+        condition: service_started
+
+  worker-egress:
+    <<: *backend
+    # The only service that talks to public sources (SafeHttpClient) and to AI / vision providers.
+    command: ["python", "-m", "angel_engine.worker", "--queues", "egress,ai"]
+    networks: [backend, egress]
+    depends_on:
+      keys-init:
+        condition: service_completed_successfully
+      migrate:
+        condition: service_completed_successfully
+
+  web:
+    image: angel-engine-web:${ANGEL_VERSION:-local}
+    build:
+      context: ..
+      dockerfile: deploy/web.Dockerfile
+    networks: [frontend]
+    read_only: true
+    tmpfs:
+      - /tmp
+      - /app/.next/cache
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    restart: unless-stopped
+
+  caddy:
+    image: caddy:2-alpine
+    environment:
+      ANGEL_DOMAIN: ${ANGEL_DOMAIN}
+      ANGEL_TLS_DIRECTIVE: ${ANGEL_TLS_DIRECTIVE:-}
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    networks: [edge, frontend]
+    depends_on: [api, web]
+    cap_drop: [ALL]
+    cap_add: [NET_BIND_SERVICE]
+    restart: unless-stopped
+
+networks:
+  edge: {}
+  frontend:
+    internal: true
+  backend:
+    internal: true
+  egress: {}
+
+volumes:
+  pgdata:
+  storage:
+  keys:
+  clamdb:
+  caddy_data:
+  caddy_config:
+
+secrets:
+  postgres_password:
+    file: ./secrets/postgres_password
+  db_owner_password:
+    file: ./secrets/db_owner_password
+  db_app_password:
+    file: ./secrets/db_app_password
+  db_worker_password:
+    file: ./secrets/db_worker_password
+  db_maintenance_password:
+    file: ./secrets/db_maintenance_password
+  redis_password:
+    file: ./secrets/redis_password
+  angel_database_url:
+    file: ./secrets/angel_database_url
+  angel_database_url_worker:
+    file: ./secrets/angel_database_url_worker
+  angel_database_url_maintenance:
+    file: ./secrets/angel_database_url_maintenance
+  angel_database_url_owner:
+    file: ./secrets/angel_database_url_owner
+  angel_redis_url:
+    file: ./secrets/angel_redis_url

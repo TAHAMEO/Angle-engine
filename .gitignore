@@ -37,3 +37,6 @@ var/
 .vscode/*
 !.vscode/extensions.json
 *.swp
+
+# --- Deployment secrets ---
+deploy/secrets/

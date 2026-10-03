@@ -47,3 +47,40 @@ api: ## Run the API with auto-reload (development)
 .PHONY: worker
 worker: ## Run the background worker (all queues)
 	cd $(BACKEND) && .venv/bin/python -m angel_engine.worker --queues analysis,egress,ai,maintenance
+
+.PHONY: openapi
+openapi: ## Export the API schema snapshot and regenerate the web client's types
+	cd $(BACKEND) && .venv/bin/angel-engine openapi --output ../frontend/openapi.json
+	cd frontend && pnpm gen:api
+
+.PHONY: seed-demo
+seed-demo: ## Load the offline demo dataset (requires fixtures mode and the offline demo AI)
+	cd $(BACKEND) && .venv/bin/angel-engine seed-demo
+
+.PHONY: web-install
+web-install: ## Install the web client's dependencies
+	cd frontend && pnpm install --frozen-lockfile
+
+.PHONY: web-dev
+web-dev: ## Run the web client against the local API (http://localhost:3000)
+	cd frontend && ANGEL_DEV_API_ORIGIN=http://127.0.0.1:8000 pnpm dev
+
+.PHONY: web-check
+web-check: ## Lint, type-check, test and verify the web client's API types
+	cd frontend && pnpm lint && pnpm typecheck && pnpm test && pnpm check:api
+
+.PHONY: compose-config
+compose-config: ## Validate the Docker Compose files (production and demo)
+	ANGEL_DOMAIN=$${ANGEL_DOMAIN:-angel.example.org} docker compose -f deploy/docker-compose.yml config -q
+	ANGEL_DOMAIN=localhost docker compose -f deploy/docker-compose.yml -f deploy/docker-compose.demo.yml config -q
+
+.PHONY: up
+up: ## Build and start the production stack (needs deploy/.env)
+	deploy/generate-secrets.sh
+	docker compose -f deploy/docker-compose.yml up -d --build
+
+.PHONY: demo
+demo: ## Build and start the offline demo on https://localhost and load the demo data
+	deploy/generate-secrets.sh
+	ANGEL_DOMAIN=localhost docker compose -f deploy/docker-compose.yml -f deploy/docker-compose.demo.yml up -d --build
+	ANGEL_DOMAIN=localhost docker compose -f deploy/docker-compose.yml -f deploy/docker-compose.demo.yml run --rm api angel-engine seed-demo

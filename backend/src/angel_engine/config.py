@@ -2,16 +2,23 @@
 
 from __future__ import annotations
 
+import os
 from functools import lru_cache
 from pathlib import Path
 from typing import Literal
 
-from pydantic import Field, SecretStr, model_validator
+from pydantic import Field, SecretStr, field_validator, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 Environment = Literal["development", "test", "e2e", "production"]
 
 _DEV_DB = "postgresql+asyncpg://{user}:{user}_dev@127.0.0.1:54329/angel_engine"
+
+
+def _secrets_dir() -> str | None:
+    """Directory of secret files named like the variables (``angel_database_url`` …), e.g. Docker ``/run/secrets``."""
+    path = os.environ.get("ANGEL_SECRETS_DIR")
+    return path if path and Path(path).is_dir() else None
 
 
 class Settings(BaseSettings):
@@ -20,6 +27,7 @@ class Settings(BaseSettings):
         env_file=None,
         extra="ignore",
         case_sensitive=False,
+        secrets_dir=_secrets_dir(),
     )
 
     env: Environment = "development"
@@ -112,6 +120,25 @@ class Settings(BaseSettings):
 
     # --- End-to-end test mode ------------------------------------------------------------------
     e2e_idle_minutes: int | None = None
+
+    @field_validator(
+        "anthropic_api_key",
+        "brave_api_key",
+        "tineye_api_key",
+        "google_vision_api_key",
+        "github_token",
+        "stackexchange_key",
+        "s3_access_key_id",
+        "s3_secret_access_key",
+        "operator_contact",
+        mode="before",
+    )
+    @classmethod
+    def _blank_is_unset(cls, value: object) -> object:
+        """``ANGEL_ANTHROPIC_API_KEY=`` in an env file means "not configured", not an empty credential."""
+        if isinstance(value, str) and not value.strip():
+            return None
+        return value
 
     @model_validator(mode="after")
     def _production_guardrails(self) -> Settings:

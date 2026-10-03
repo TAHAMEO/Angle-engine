@@ -1,0 +1,54 @@
+# TLS termination and routing. /api goes to the FastAPI service, everything else to the Next.js server.
+# The API and the web server set their own Content-Security-Policy; Caddy adds HSTS only.
+{
+	# Set an ACME account e-mail here if you want expiry notices: email you@example.org
+	servers {
+		protocols h1 h2
+	}
+}
+
+{$ANGEL_DOMAIN} {
+	{$ANGEL_TLS_DIRECTIVE}
+	encode zstd gzip
+	header {
+		Strict-Transport-Security "max-age=63072000; includeSubDomains"
+		-Server
+		-X-Powered-By
+	}
+	log {
+		output stdout
+		# No query strings, cookies or CSRF tokens; client addresses are truncated.
+		format filter {
+			wrap json
+			fields {
+				request>uri regexp "\?.*" "?[redacted]"
+				request>headers>Cookie delete
+				request>headers>X-Csrf-Token delete
+				resp_headers>Set-Cookie delete
+				request>remote_ip ip_mask {
+					ipv4 16
+					ipv6 32
+				}
+				request>client_ip ip_mask {
+					ipv4 16
+					ipv6 32
+				}
+			}
+		}
+	}
+
+	@api path /api/*
+	handle @api {
+		request_body {
+			max_size 26MB
+		}
+		reverse_proxy api:8000
+	}
+
+	handle {
+		request_body {
+			max_size 1MB
+		}
+		reverse_proxy web:3000
+	}
+}
