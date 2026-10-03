@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/data";
 import { Alert } from "@/components/ui/feedback";
 import { Checkbox, Field, Input, Textarea } from "@/components/ui/form";
-import { api, ensureCsrf } from "@/lib/api/client";
+import { api, formCsrfToken } from "@/lib/api/client";
 import { errorFor, messageOf } from "@/lib/api/errors";
 
 export function RequestAccessForm() {
@@ -28,7 +28,7 @@ export function RequestAccessForm() {
     }
     setBusy(true);
     try {
-      const token = await ensureCsrf();
+      const token = await formCsrfToken();
       const { error: problem, response } = await api.POST("/api/v1/auth/registration-requests", {
         body: { ...form, organization_unit: form.organization_unit || null, ...checks },
         headers: { "X-CSRF-Token": token },

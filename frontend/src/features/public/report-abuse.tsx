@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/data";
 import { Alert } from "@/components/ui/feedback";
 import { Field, Input, Select, Textarea } from "@/components/ui/form";
-import { api, ensureCsrf } from "@/lib/api/client";
+import { api, formCsrfToken } from "@/lib/api/client";
 import { errorFor, messageOf } from "@/lib/api/errors";
 import type { S } from "@/lib/api/types";
 
@@ -33,7 +33,7 @@ export function ReportAbuseForm() {
     setBusy(true);
     setError(null);
     try {
-      const token = await ensureCsrf();
+      const token = await formCsrfToken();
       const { error: problem, response } = await api.POST("/api/v1/abuse-reports", {
         body: { category, description, contact: contact || null, target_ref: targetRef || null },
         headers: { "X-CSRF-Token": token },

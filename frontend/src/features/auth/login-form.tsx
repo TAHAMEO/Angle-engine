@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/data";
 import { Alert } from "@/components/ui/feedback";
 import { Field, Input } from "@/components/ui/form";
-import { api, ensureCsrf } from "@/lib/api/client";
+import { api, formCsrfToken } from "@/lib/api/client";
 import { errorFor, messageOf } from "@/lib/api/errors";
 import { resetExpiry, safeNext } from "@/lib/api/session";
 import type { Session } from "@/lib/api/types";
@@ -52,7 +52,7 @@ export function LoginForm() {
     setBusy(true);
     setError(null);
     try {
-      const token = await ensureCsrf();
+      const token = await formCsrfToken();
       const { data, error: problem, response } = await api.POST("/api/v1/auth/login", {
         body: { email, password },
         headers: { "X-CSRF-Token": token },

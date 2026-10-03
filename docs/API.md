@@ -14,7 +14,7 @@ request is authenticated by the session cookie and protected against CSRF.
 |---|---|
 | Format | JSON request and response bodies (`Content-Type: application/json` is required); RFC 3339 UTC timestamps; UUID identifiers; routes have no trailing slash |
 | Authentication | `__Host-ae_sid` session cookie (`HttpOnly`, `Secure`, `SameSite=Strict`). Sign-in is two steps (`auth/login` → `auth/mfa/verify`); until MFA is enrolled only the enrollment endpoints work |
-| CSRF | Unsafe methods need `X-CSRF-Token` (from `GET auth/session`, or `GET auth/csrf` for anonymous forms) and a same-origin `Origin` header |
+| CSRF | Unsafe methods need `X-CSRF-Token` and a same-origin `Origin` header. Signed-in requests use the session's token (`__Host-ae_csrf` cookie, also returned by `GET auth/session`); anonymous forms use a fresh token from `GET auth/csrf`, which comes with its own HttpOnly `__Host-ae_form_csrf` cookie |
 | Step-up | Sensitive actions return `401 reauth-required` unless the password was confirmed (`POST auth/reauth`) in the last 5 minutes |
 | Pagination | Sources, evidence, findings and entities take `?limit=` (≤ 100) and `?cursor=` and return `{items, next_cursor, has_more}`; cursors are signed and bound to the filters they were issued for. Other lists are plain arrays |
 | Concurrency | Investigations, findings and reports return an `ETag` (`"<version>"`). Status transitions, finding edits and report finalization require `If-Match` (`428` without it, `412` on mismatch) |

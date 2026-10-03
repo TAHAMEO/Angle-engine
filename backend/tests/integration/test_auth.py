@@ -9,7 +9,7 @@ from sqlalchemy import select, update
 
 from angel_engine.core.clock import utcnow
 from angel_engine.db.models import AuditLog, User, UserSession
-from tests.helpers import PASSWORD, anonymous_csrf, create_user, csrf_headers, login, totp_code
+from tests.helpers import CSRF_COOKIE, PASSWORD, anonymous_csrf, create_user, csrf_headers, login, totp_code
 
 pytestmark = pytest.mark.db
 
@@ -163,6 +163,37 @@ async def test_unsafe_request_requires_session_csrf(client, services):
     assert resp.status_code == 403
     ok = await client.patch("/api/v1/me", json={"display_name": "Renamed"}, headers=csrf_headers(client))
     assert ok.status_code == 200 and ok.json()["display_name"] == "Renamed"
+
+
+async def test_form_csrf_token_is_kept_apart_from_the_session_token(client, services):
+    """A session token the browser still holds once made "The request could not be verified" block signing in."""
+    user = await create_user(services, mfa=True)
+    await login(client, user)
+    session_token = client.cookies.get(CSRF_COOKIE)
+    issued = await client.get("/api/v1/auth/csrf")
+    form_cookie = issued.headers["set-cookie"]
+    assert form_cookie.startswith("__Host-ae_form_csrf=") and "HttpOnly" in form_cookie
+    assert client.cookies.get(CSRF_COOKIE) == session_token  # a signed-in tab keeps working
+
+    credentials = {"email": user.email, "password": PASSWORD}
+    wrong = await client.post("/api/v1/auth/login", json=credentials, headers={"X-CSRF-Token": session_token})
+    assert wrong.status_code == 403 and wrong.json()["code"] == "csrf_token_invalid"
+    again = await client.post(
+        "/api/v1/auth/login", json=credentials, headers={"X-CSRF-Token": issued.json()["csrf_token"]}
+    )
+    assert again.status_code == 200 and again.json()["state"] == "mfa_pending"
+    # Starting over from the code step works the same way.
+    restart = await client.post("/api/v1/auth/login", json=credentials, headers=await anonymous_csrf(client))
+    assert restart.status_code == 200 and restart.json()["state"] == "mfa_pending"
+
+
+async def test_session_endpoint_repairs_a_missing_csrf_cookie(client, services):
+    user = await create_user(services)
+    await login(client, user)
+    client.cookies.delete(CSRF_COOKIE)
+    assert (await client.get("/api/v1/auth/session")).status_code == 200
+    ok = await client.patch("/api/v1/me", json={"display_name": "Renamed"}, headers=csrf_headers(client))
+    assert ok.status_code == 200, ok.text
 
 
 async def test_idle_expiry_and_background_requests(client, services):

@@ -19,18 +19,22 @@ export function readCsrfCookie(): string | null {
   return null;
 }
 
-/** Anonymous forms (login, access request, abuse report) first fetch a server-signed CSRF token. */
-export async function ensureCsrf(): Promise<string> {
-  const existing = readCsrfCookie();
-  if (existing) return existing;
-  const response = await fetch("/api/v1/auth/csrf", { credentials: "same-origin" });
-  const body = (await response.json()) as { csrf_token: string };
+/**
+ * Anonymous forms (login, access request, abuse report) fetch a fresh server-signed CSRF token for every submission.
+ * It has its own HttpOnly cookie, so a session token the browser still holds (an unfinished sign-in, an expired
+ * session) never stands in for it.
+ */
+export async function formCsrfToken(): Promise<string> {
+  const response = await fetch("/api/v1/auth/csrf", { credentials: "same-origin", cache: "no-store" });
+  const body = (await response.json().catch(() => null)) as { csrf_token?: string } | null;
+  if (!response.ok || !body?.csrf_token) throw errorFor(response.status, body);
   return body.csrf_token;
 }
 
 const middleware: Middleware = {
   onRequest({ request }) {
-    if (UNSAFE.has(request.method)) {
+    // An explicit token (an anonymous form's) wins over the session's cookie.
+    if (UNSAFE.has(request.method) && !request.headers.has("X-CSRF-Token")) {
       const token = readCsrfCookie();
       if (token) request.headers.set("X-CSRF-Token", token);
     }

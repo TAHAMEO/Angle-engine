@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { BACKGROUND, api } from "./client";
+import { BACKGROUND, api, formCsrfToken } from "./client";
 import { expireSession, recordExpiry } from "./session";
 
 vi.mock("./session", async (importOriginal) => {
@@ -31,6 +31,30 @@ describe("API client middleware", () => {
     const [post, get] = fetchMock.mock.calls.map(([request]) => request as Request);
     expect(post!.headers.get("X-CSRF-Token")).toBe("token-123");
     expect(get!.headers.get("X-CSRF-Token")).toBeNull();
+  });
+
+  it("sends an anonymous form's fresh token, not a leftover session cookie", async () => {
+    fetchMock.mockImplementation(async (input) =>
+      (input instanceof Request ? input.url : String(input)).endsWith("/api/v1/auth/csrf")
+        ? json({ csrf_token: "form-456" })
+        : json({ state: "mfa_pending" }),
+    );
+    const token = await formCsrfToken();
+    await api.POST("/api/v1/auth/login", {
+      body: { email: "someone@agency.example", password: "correct-horse-battery" },
+      headers: { "X-CSRF-Token": token },
+    });
+    expect(token).toBe("form-456");
+    expect((fetchMock.mock.calls[1]![0] as Request).headers.get("X-CSRF-Token")).toBe("form-456");
+  });
+
+  it("reports a failed form-token request instead of submitting without one", async () => {
+    fetchMock.mockResolvedValueOnce(json({ type: "/problems/rate-limited", title: "Too many requests", status: 429 }, 429));
+    const error = await formCsrfToken().then(
+      () => null,
+      (reason: unknown) => reason,
+    );
+    expect((error as { status?: number } | null)?.status).toBe(429);
   });
 
   it("marks polling requests as background activity", async () => {

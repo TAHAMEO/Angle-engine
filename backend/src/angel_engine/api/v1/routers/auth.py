@@ -173,13 +173,22 @@ def _session_out(svc_terms: str, resolved: sessions.ResolvedSession, csrf_token:
 
 @router.get("/csrf", openapi_extra={"x-public": True})
 async def anonymous_csrf_token(response: Response, svc: ServicesDep) -> dict[str, str]:
-    """Issue a server-signed CSRF token for unauthenticated forms (login, access request, abuse report)."""
-    token = csrf.issue(svc.keys.secret("csrf"))
-    from angel_engine.api.deps import cookie_names
+    """Issue a server-signed CSRF token for unauthenticated forms (login, access request, abuse report).
 
-    _, csrf_name = cookie_names(svc.settings)
+    Fetch a new token for each submission. It is paired with its own HttpOnly cookie, so it neither replaces nor
+    depends on the CSRF token of a session the browser may still hold.
+    """
+    from angel_engine.api.deps import form_csrf_cookie_name
+
+    token = csrf.issue(svc.keys.secret("csrf"))
     response.set_cookie(
-        csrf_name, token, max_age=3600, path="/", secure=svc.settings.cookie_secure, httponly=False, samesite="strict"
+        form_csrf_cookie_name(svc.settings),
+        token,
+        max_age=3600,
+        path="/",
+        secure=svc.settings.cookie_secure,
+        httponly=True,
+        samesite="strict",
     )
     return {"csrf_token": token}
 
@@ -412,14 +421,16 @@ async def regenerate_recovery_codes(principal: CurrentPrincipal, db: DbSession) 
 
 
 @router.get("/session")
-async def get_session(request: Request, resolved: PendingSession) -> SessionOut:
-    from angel_engine.api.deps import cookie_names
+async def get_session(request: Request, response: Response, resolved: PendingSession) -> SessionOut:
+    from angel_engine.api.deps import cookie_names, set_csrf_cookie
 
     svc = get_services(request)
     _, csrf_name = cookie_names(svc.settings)
     token = request.cookies.get(csrf_name)
     if not token or not csrf.valid(resolved.session.csrf_key, token):
+        # A missing or foreign CSRF cookie would make every write fail; replace it.
         token = csrf.issue(resolved.session.csrf_key)
+        set_csrf_cookie(response, svc.settings, token)
     return _session_out(current_versions()["terms"], resolved, token)
 
 

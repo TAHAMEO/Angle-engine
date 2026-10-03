@@ -367,6 +367,9 @@ export interface paths {
         /**
          * Anonymous Csrf Token
          * @description Issue a server-signed CSRF token for unauthenticated forms (login, access request, abuse report).
+         *
+         *     Fetch a new token for each submission. It is paired with its own HttpOnly cookie, so it neither replaces nor
+         *     depends on the CSRF token of a session the browser may still hold.
          */
         get: operations["anonymous_csrf_token_api_v1_auth_csrf_get"];
         put?: never;

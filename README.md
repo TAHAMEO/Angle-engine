@@ -58,8 +58,9 @@ make demo        # generates secrets, builds the images, starts https://localhos
 
 The demo uses recorded connector responses, an offline demo AI and fictional `.example` data. Sign in at
 `https://localhost` (accept Caddy's local certificate) with `investigator@angel-engine.example` and the password
-and TOTP secret printed by the seed (add the secret to any authenticator app). Other demo accounts: supervisor,
-viewer, admin and auditor.
+printed by the seed (`make demo` prints the demo accounts again whenever it runs). Other demo accounts: supervisor,
+viewer, admin and auditor. Sign-in then asks for a six-digit code: add the account's TOTP secret (also printed) to
+an authenticator app as a time-based key, or run `oathtool --totp -b <secret>`. Each code works once.
 
 ### Local development
 

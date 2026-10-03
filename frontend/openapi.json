@@ -10026,7 +10026,7 @@
     },
     "/api/v1/auth/csrf": {
       "get": {
-        "description": "Issue a server-signed CSRF token for unauthenticated forms (login, access request, abuse report).",
+        "description": "Issue a server-signed CSRF token for unauthenticated forms (login, access request, abuse report).\n\nFetch a new token for each submission. It is paired with its own HttpOnly cookie, so it neither replaces nor\ndepends on the CSRF token of a session the browser may still hold.",
         "operationId": "anonymous_csrf_token_api_v1_auth_csrf_get",
         "responses": {
           "200": {

@@ -388,6 +388,7 @@ async def run_seed(*, reset: bool = False) -> None:
             exists = (await db.execute(select(User.id).where(User.email == DEMO_USERS[0].email))).first()
         if exists:
             print("seed-demo: demo users already exist; nothing to do.")  # noqa: T201
+            _print_accounts()
             return
         app = create_app(services=services)
         await sync_legal_documents(services)
@@ -395,6 +396,15 @@ async def run_seed(*, reset: bool = False) -> None:
     finally:
         await services.close()
     print(f"seed-demo: created demo investigation {result['investigation']}.")  # noqa: T201
+    _print_accounts()
+
+
+def _print_accounts() -> None:
+    """The demo's sign-in details (fixed, published development values; the seed never runs in production)."""
     print(f"seed-demo: password for every demo account: {DEMO_PASSWORD}")  # noqa: T201
     for user in DEMO_USERS:
         print(f"  {user.role:<13} {user.email:<38} TOTP secret {user.totp_secret}")  # noqa: T201
+    print(  # noqa: T201
+        "seed-demo: for the six-digit sign-in code, add the account's TOTP secret to an authenticator app "
+        "(time-based, 6 digits) or run: oathtool --totp -b <secret>"
+    )
