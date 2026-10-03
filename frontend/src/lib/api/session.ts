@@ -67,9 +67,20 @@ export function listenAcrossTabs(onExpired: (reason: string) => void): () => voi
 }
 
 /** Only allow same-site relative paths as post-login destinations. */
+const NEXT_BASE = "https://angel-engine.invalid";
+
+/**
+ * A post-sign-in destination: only a path on this site. URL parsers drop tabs and newlines and treat "\\" like
+ * "/", so "/<TAB>/evil.example" would become "//evil.example"; reject those characters and re-check the origin.
+ */
 export function safeNext(path: string | null | undefined): string {
-  if (!path || !path.startsWith("/") || path.startsWith("//") || path.includes("\\")) return "/dashboard";
-  return path;
+  if (!path || !path.startsWith("/") || path.startsWith("//") || /[\\\u0000-\u001f\u007f]/.test(path)) return "/dashboard";
+  try {
+    const url = new URL(path, NEXT_BASE);
+    return url.origin === NEXT_BASE ? `${url.pathname}${url.search}${url.hash}` : "/dashboard";
+  } catch {
+    return "/dashboard";
+  }
 }
 
 let onExpire: ((reason: string) => void) | null = null;
