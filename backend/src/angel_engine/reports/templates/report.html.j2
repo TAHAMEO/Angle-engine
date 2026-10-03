@@ -1,0 +1,139 @@
+{#- Self-contained report: no external resources, no scripts. Rendered with autoescaping. -#}
+{%- macro refs(items) -%}
+{%- if items %} <span class="refs" aria-label="Cites">[{% for r in items %}{{ r.label }}{% if not loop.last %}, {% endif %}{% endfor %}]</span>{% endif -%}
+{%- endmacro -%}
+{%- macro cell(value, link) -%}
+{%- if link and value and (value.startswith('https://') or value.startswith('http://')) -%}
+<a href="{{ value }}" rel="noopener noreferrer nofollow" referrerpolicy="no-referrer">{{ value }}</a>
+{%- else -%}{{ value }}{%- endif -%}
+{%- endmacro -%}
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="referrer" content="no-referrer">
+<meta name="robots" content="noindex, nofollow">
+<title>{{ doc.title }} — {{ doc.investigation_ref }}</title>
+<style>
+  @page {
+    size: A4;
+    margin: 18mm 15mm 20mm 15mm;
+    @top-right { content: "{{ css_confidentiality }}"; font: 600 8pt system-ui, sans-serif; color: #4a5568; }
+    @bottom-left { content: "{{ css_footer }}"; font: 7.5pt system-ui, sans-serif; color: #4a5568; }
+    @bottom-right { content: "Page " counter(page) " of " counter(pages); font: 7.5pt system-ui, sans-serif; color: #4a5568; }
+  }
+  :root { --fg: #0f1a2b; --muted: #4a5568; --line: #cbd5e1; --soft: #f1f5f9; --accent: #0e6fa8; }
+  * { box-sizing: border-box; }
+  html { color: var(--fg); background: #ffffff; font: 10.5pt/1.45 "Inter", system-ui, -apple-system, "Segoe UI", sans-serif; }
+  body { margin: 0 auto; max-width: 960px; padding: 24px; }
+  h1 { font-size: 20pt; margin: 4px 0 6px; line-height: 1.2; }
+  h2 { font-size: 13.5pt; margin: 26px 0 10px; padding-bottom: 4px; border-bottom: 1.5px solid var(--fg); break-after: avoid; }
+  h3 { font-size: 11pt; margin: 14px 0 6px; }
+  p { margin: 6px 0; }
+  .kicker { text-transform: uppercase; letter-spacing: .06em; font-size: 8pt; color: var(--muted); margin: 0; }
+  .meta { color: var(--muted); margin: 0 0 8px; }
+  .banner { border: 1.5px solid #8a5a00; background: #fff8eb; padding: 8px 10px; font-weight: 600; }
+  .notice { border-left: 3px solid var(--muted); background: var(--soft); padding: 6px 10px; }
+  .refs { font-family: "JetBrains Mono", ui-monospace, monospace; font-size: 8.5pt; color: var(--accent); white-space: nowrap; }
+  .uncited { font-size: 8.5pt; font-weight: 600; color: #6d3fc0; }
+  .ai { border-left: 3px dashed #6d3fc0; padding-left: 10px; }
+  table { width: 100%; border-collapse: collapse; margin: 8px 0 12px; font-size: 9pt; font-variant-numeric: tabular-nums; }
+  caption { text-align: left; font-weight: 600; padding: 4px 0; }
+  th, td { border: 1px solid var(--line); padding: 4px 6px; text-align: left; vertical-align: top; }
+  td { overflow-wrap: break-word; }
+  td.url { overflow-wrap: anywhere; }
+  th { background: var(--soft); font-weight: 600; white-space: nowrap; }
+  td.nowrap { white-space: nowrap; overflow-wrap: normal; }
+  table.facts th { width: 28%; }
+  tr { break-inside: avoid; }
+  a { color: var(--accent); }
+  .toc ol { columns: 2; padding-left: 18px; margin: 4px 0; }
+  .finding { border: 1px solid var(--line); border-radius: 6px; padding: 8px 10px; margin: 10px 0; break-inside: avoid; }
+  .finding header { display: flex; flex-wrap: wrap; gap: 6px; align-items: baseline; margin-bottom: 4px; font-size: 9pt; }
+  .label { font-family: "JetBrains Mono", ui-monospace, monospace; font-weight: 700; }
+  .badge { border: 1px solid currentColor; border-radius: 4px; padding: 0 5px; font-weight: 600; }
+  .status-confirmed_by_source .status { color: #13703f; }
+  .status-corroborated .status { color: #1d5fb8; }
+  .status-unverified .status { color: #4a5568; }
+  .status-contradicted .status { color: #b42323; }
+  .status-ai_hypothesis .status { color: #6d3fc0; border-style: dashed; }
+  .prov-observed { color: #0f766e; }
+  .prov-source_reported { color: #8a5a00; border-style: double; border-width: 3px; }
+  .prov-ai_hypothesis { color: #6d3fc0; border-style: dashed; }
+  .statement { font-weight: 600; margin: 2px 0 6px; }
+  .confidence { font-size: 9pt; color: var(--muted); }
+  .integrity { margin-top: 28px; border-top: 1px solid var(--line); padding-top: 8px; font-size: 8.5pt; color: var(--muted); }
+  .mono { font-family: "JetBrains Mono", ui-monospace, monospace; overflow-wrap: anywhere; }
+  .watermark { position: fixed; top: 42%; left: 0; right: 0; text-align: center; transform: rotate(-30deg);
+               font: 800 64pt system-ui, sans-serif; color: rgba(15, 26, 43, .06); pointer-events: none; z-index: 0; }
+  @media print { body { padding: 0; max-width: none; } a { color: inherit; } }
+</style>
+</head>
+<body>
+<div class="watermark" aria-hidden="true">{{ watermark }}</div>
+<header>
+  <p class="kicker">Angel Engine · Investigation report · {{ doc.confidentiality }}</p>
+  <h1>{{ doc.title }}</h1>
+  <p class="meta">{{ doc.investigation_ref }} · {{ status_label }} · generated {{ doc.generated_at }} UTC</p>
+  {%- if doc.restricted_mode %}
+  <p class="banner" role="note">Restricted mode — this investigation concerns an individual. Handle this report with particular care.</p>
+  {%- endif %}
+</header>
+<nav class="toc" aria-label="Contents"><h2>Contents</h2><ol>
+{%- for s in doc.sections %}<li><a href="#{{ s.key }}">{{ s.title }}</a></li>{% endfor -%}
+</ol></nav>
+<main>
+{%- for s in doc.sections %}
+<section id="{{ s.key }}" aria-labelledby="h-{{ s.key }}">
+<h2 id="h-{{ s.key }}">{{ s.title }}</h2>
+{%- for b in s.blocks %}
+{%- if b.type == 'paragraph' %}
+<p>{{ b.text }}{{ refs(b.refs) }}{% if b.data.note %} <span class="uncited">[{{ b.data.note }}]</span>{% endif %}</p>
+{%- elif b.type == 'notice' %}
+<p class="notice" role="note">{{ b.text }}</p>
+{%- elif b.type == 'ai_segment' %}
+<p class="ai">{{ b.text }}{{ refs(b.refs) }}{% if b.data.label %} <span class="uncited">[{{ b.data.label }}]</span>{% endif %}</p>
+{%- elif b.type == 'list' %}
+<ul>{% for item in b.data['items'] %}<li>{{ item }}</li>{% endfor %}</ul>
+{%- elif b.type == 'facts' %}
+<table class="facts"><tbody>{% for row in b.data.rows %}<tr><th scope="row">{{ row[0] }}</th><td>{{ row[1] }}</td></tr>{% endfor %}</tbody></table>
+{%- elif b.type == 'table' %}
+<table>{% if b.text %}<caption>{{ b.text }}</caption>{% endif %}
+<thead><tr>{% for c in b.data.columns %}<th scope="col">{{ c }}</th>{% endfor %}</tr></thead>
+<tbody>{% for row in b.data.rows %}<tr>{% for value in row %}{% set link = loop.index0 in (b.data.links or []) %}<td{% if link %} class="url"{% elif loop.index0 in (b.data.nowrap or []) %} class="nowrap"{% endif %}>{{ cell(value, link) }}</td>{% endfor %}</tr>{% endfor %}</tbody></table>
+{%- elif b.type == 'finding' %}
+<article class="finding status-{{ b.data.status }}">
+  <header>
+    <span class="label">{{ b.data.label }}</span>
+    <span class="badge status">{{ status_marks.get(b.data.status, '') }} {{ b.data.status_label }}</span>
+    <span class="badge prov-{{ b.data.provenance }}">{{ b.data.provenance_label }}</span>
+    {%- if b.data.importance == 'key' %}<span class="badge">Key finding</span>{% endif %}
+  </header>
+  <p class="statement">{{ b.text }}{{ refs(b.refs) }}</p>
+  {%- if b.data.confidence %}
+  <p class="confidence">Confidence: {{ b.data.confidence.level }}{% if b.data.confidence.basis %} — {{ b.data.confidence.basis }}{% endif %}</p>
+  {%- endif %}
+  {%- if b.data.note %}<p class="notice">{{ b.data.note }}</p>{% endif %}
+  {%- if b.data.evidence %}
+  <table><thead><tr><th scope="col">Evidence</th><th scope="col">Stance</th><th scope="col">Origin</th><th scope="col">Source</th><th scope="col">Captured</th><th scope="col">Published</th><th scope="col">Provenance</th></tr></thead>
+  <tbody>{% for e in b.data.evidence %}<tr><td class="mono nowrap">{{ e.label }}</td><td>{{ e.stance }}{% if e.directly_states %} (states it directly){% endif %}</td><td>{{ e.origin }}</td><td class="mono nowrap">{{ e.source or '—' }}</td><td class="nowrap">{{ e.captured or '—' }}</td><td class="nowrap">{{ e.published or '—' }}</td><td>{{ e.provenance }}</td></tr>{% endfor %}</tbody></table>
+  {%- endif %}
+</article>
+{%- endif %}
+{%- endfor %}
+</section>
+{%- endfor %}
+</main>
+<footer class="integrity">
+{%- if doc.integrity.sha256 %}
+<p><strong>Final report.</strong> Report ID <span class="mono">{{ doc.report_id }}</span>. SHA-256 of the report content:
+<span class="mono">{{ doc.integrity.sha256 }}</span>. Integrity code: <span class="mono">{{ doc.integrity.mac_prefix }}</span>.
+Recorded in the audit log as entry #{{ doc.integrity.audit_seq }} on {{ doc.integrity.finalized_at }} UTC.</p>
+{%- else %}
+<p><strong>Draft.</strong> Report ID <span class="mono">{{ doc.report_id }}</span>. This draft is not finalized and may change.</p>
+{%- endif %}
+<p>Prepared with Angel Engine. Verification statuses are human decisions; AI output is labelled as AI hypothesis. Angel Engine does not perform facial identification.</p>
+</footer>
+</body>
+</html>
