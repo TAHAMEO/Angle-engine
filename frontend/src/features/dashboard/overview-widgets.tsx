@@ -98,7 +98,7 @@ export function RecentFindings({ rows, investigationId }: { rows: FindingRow[]; 
       <CardHeader
         title="Recently updated findings"
         action={
-          <Link href={path(investigationId, "evidence")} className="inline-flex items-center gap-1 text-[13px] text-primary hover:underline">
+          <Link href={path(investigationId, "evidence")} className="inline-flex items-center gap-1 text-[13px] text-primary underline underline-offset-2 hover:decoration-2">
             All evidence <ArrowRight className="h-3.5 w-3.5" aria-hidden />
           </Link>
         }
@@ -134,7 +134,7 @@ export function MiniTimeline({ events, investigationId }: { events: EventOut[]; 
       <CardHeader
         title="Timeline"
         action={
-          <Link href={path(investigationId, "timeline")} className="inline-flex items-center gap-1 text-[13px] text-primary hover:underline">
+          <Link href={path(investigationId, "timeline")} className="inline-flex items-center gap-1 text-[13px] text-primary underline underline-offset-2 hover:decoration-2">
             Open timeline <ArrowRight className="h-3.5 w-3.5" aria-hidden />
           </Link>
         }
@@ -167,7 +167,7 @@ export function MiniGraph({ graph, investigationId }: { graph: unknown; investig
         title="Relationships"
         description={`${nodes.length} entities · ${edges.length} relationships`}
         action={
-          <Link href={path(investigationId, "graph")} className="inline-flex items-center gap-1 text-[13px] text-primary hover:underline">
+          <Link href={path(investigationId, "graph")} className="inline-flex items-center gap-1 text-[13px] text-primary underline underline-offset-2 hover:decoration-2">
             Open graph <ArrowRight className="h-3.5 w-3.5" aria-hidden />
           </Link>
         }

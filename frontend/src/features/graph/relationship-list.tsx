@@ -31,7 +31,7 @@ export function RelationshipList({ graph, onSelect }: { graph: GraphData; onSele
                 <span className="block text-xs text-muted">{from ? ENTITY_LABELS[from.type] : ""}</span>
               </Td>
               <Td>
-                <button type="button" className="text-primary hover:underline" onClick={() => onSelect(edge.id)}>
+                <button type="button" className="text-primary underline underline-offset-2 hover:decoration-2" onClick={() => onSelect(edge.id)}>
                   {REL_LABELS[edge.rel_type] ?? edge.rel_type}
                 </button>
               </Td>

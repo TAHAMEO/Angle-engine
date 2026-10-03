@@ -201,7 +201,7 @@ export function InvestigationDataControls() {
               </Button>
               <p className="text-muted">
                 Legal holds are placed by an administrator. Data-subject requests can be raised through the public{" "}
-                <Link href="/report-abuse" className="text-primary hover:underline">
+                <Link href="/report-abuse" className="text-primary underline underline-offset-2 hover:decoration-2">
                   report form
                 </Link>
                 .

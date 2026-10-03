@@ -145,7 +145,7 @@ export function ReportsList() {
             {data.map((report) => (
               <tr key={report.id}>
                 <Td>
-                  <Link href={`${path(inv.id, "reports")}/${report.id}`} className="font-medium text-primary hover:underline">
+                  <Link href={`${path(inv.id, "reports")}/${report.id}`} className="font-medium text-primary underline underline-offset-2 hover:decoration-2">
                     {report.title}
                   </Link>
                 </Td>

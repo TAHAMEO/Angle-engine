@@ -7,7 +7,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useRef, useState } from "react";
 import { useForm, useWatch } from "react-hook-form";
-import { z } from "zod";
+import { z } from "@/lib/zod";
 
 import { PageHeader } from "@/components/shell/app-shell";
 import { PolicyDecisionPanel } from "@/components/security/policy-panel";
@@ -342,11 +342,11 @@ export function NewInvestigationWizard() {
               {docsPending ? <LoadingBlock /> : null}
               <p className="text-sm text-muted">
                 These statements are recorded with this investigation, bound to the{" "}
-                <Link href="/legal/terms" target="_blank" className="text-primary hover:underline">
+                <Link href="/legal/terms" target="_blank" className="text-primary underline underline-offset-2 hover:decoration-2">
                   Terms of Use{terms ? ` (version ${terms.version})` : ""}
                 </Link>{" "}
                 and the{" "}
-                <Link href="/legal/acceptable-use" target="_blank" className="text-primary hover:underline">
+                <Link href="/legal/acceptable-use" target="_blank" className="text-primary underline underline-offset-2 hover:decoration-2">
                   Acceptable Use Policy{aup ? ` (version ${aup.version})` : ""}
                 </Link>
                 .

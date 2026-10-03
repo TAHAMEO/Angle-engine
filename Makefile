@@ -69,6 +69,10 @@ web-dev: ## Run the web client against the local API (http://localhost:3000)
 web-check: ## Lint, type-check, test and verify the web client's API types
 	cd frontend && pnpm lint && pnpm typecheck && pnpm test && pnpm check:api
 
+.PHONY: e2e
+e2e: ## Build the web client and run the Playwright end-to-end suite (starts a disposable backend)
+	cd frontend && ANGEL_DEV_API_ORIGIN=http://127.0.0.1:8000 pnpm build && pnpm e2e
+
 .PHONY: compose-config
 compose-config: ## Validate the Docker Compose files (production and demo)
 	ANGEL_DOMAIN=$${ANGEL_DOMAIN:-angel.example.org} docker compose -f deploy/docker-compose.yml config -q

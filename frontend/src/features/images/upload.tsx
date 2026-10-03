@@ -158,7 +158,7 @@ export function ImageUpload({ investigationId }: { investigationId: string }) {
                 )}
               </div>
               {item.image ? (
-                <Link href={`${path(investigationId, "images")}/${item.image.id}`} className="text-[13px] text-primary hover:underline">
+                <Link href={`${path(investigationId, "images")}/${item.image.id}`} className="text-[13px] text-primary underline underline-offset-2 hover:decoration-2">
                   Open
                 </Link>
               ) : null}

@@ -1,4 +1,4 @@
-import { z } from "zod";
+import { z } from "@/lib/zod";
 
 /**
  * Structured finding filters live in the URL (shareable, back-button friendly). The free-text keyword is deliberately

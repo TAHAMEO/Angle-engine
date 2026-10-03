@@ -1,11 +1,12 @@
 #!/usr/bin/env bash
 # Local PostgreSQL 16 cluster for development and tests.
 #
-#   scripts/dev-postgres.sh init     create the cluster, roles and databases
-#   scripts/dev-postgres.sh start    start the server (port $ANGEL_PG_PORT, default 54329)
-#   scripts/dev-postgres.sh stop     stop the server
-#   scripts/dev-postgres.sh status   show server status
-#   scripts/dev-postgres.sh reset    stop, delete and re-create everything
+#   scripts/dev-postgres.sh init           create the cluster, roles and databases
+#   scripts/dev-postgres.sh start          start the server (port $ANGEL_PG_PORT, default 54329)
+#   scripts/dev-postgres.sh stop           stop the server
+#   scripts/dev-postgres.sh status         show server status
+#   scripts/dev-postgres.sh reset          stop, delete and re-create everything
+#   scripts/dev-postgres.sh createdb NAME  create another application database (if missing)
 #
 # Roles (development passwords only — production uses secrets):
 #   ae_owner        owns the schema, runs migrations
@@ -60,17 +61,26 @@ CREATE ROLE ae_owner LOGIN PASSWORD 'ae_owner_dev';
 CREATE ROLE ae_app LOGIN PASSWORD 'ae_app_dev' NOBYPASSRLS;
 CREATE ROLE ae_worker LOGIN PASSWORD 'ae_worker_dev' NOBYPASSRLS;
 CREATE ROLE ae_maintenance LOGIN PASSWORD 'ae_maintenance_dev' BYPASSRLS;
-CREATE DATABASE angel_engine OWNER ae_owner;
-CREATE DATABASE angel_engine_test OWNER ae_owner;
-REVOKE ALL ON DATABASE angel_engine FROM PUBLIC;
-REVOKE ALL ON DATABASE angel_engine_test FROM PUBLIC;
-GRANT CONNECT ON DATABASE angel_engine TO ae_app, ae_worker, ae_maintenance;
-GRANT CONNECT ON DATABASE angel_engine_test TO ae_app, ae_worker, ae_maintenance;
 SQL
-  for db in angel_engine angel_engine_test; do
-    psql_super -d "$db" -c "REVOKE CREATE ON SCHEMA public FROM PUBLIC; ALTER SCHEMA public OWNER TO ae_owner;"
+  for db in angel_engine angel_engine_test angel_engine_e2e; do
+    cmd_createdb "$db"
   done
-  echo "PostgreSQL ready on 127.0.0.1:$PORT (databases angel_engine, angel_engine_test)"
+  echo "PostgreSQL ready on 127.0.0.1:$PORT (databases angel_engine, angel_engine_test, angel_engine_e2e)"
+}
+
+cmd_createdb() {
+  local db="${1:?database name required}"
+  [[ "$db" =~ ^[a-z_][a-z0-9_]*$ ]] || { echo "invalid database name: $db" >&2; exit 2; }
+  if [[ -n "$(psql_super -tA -c "SELECT 1 FROM pg_database WHERE datname = '$db'")" ]]; then
+    return 0
+  fi
+  psql_super <<SQL
+CREATE DATABASE $db OWNER ae_owner;
+REVOKE ALL ON DATABASE $db FROM PUBLIC;
+GRANT CONNECT ON DATABASE $db TO ae_app, ae_worker, ae_maintenance;
+SQL
+  psql_super -d "$db" -c "REVOKE CREATE ON SCHEMA public FROM PUBLIC; ALTER SCHEMA public OWNER TO ae_owner;"
+  echo "created database $db"
 }
 
 cmd_start() {
@@ -103,5 +113,6 @@ case "${1:-}" in
   stop) cmd_stop ;;
   status) cmd_status ;;
   reset) cmd_reset ;;
-  *) echo "usage: $0 {init|start|stop|status|reset}" >&2; exit 2 ;;
+  createdb) cmd_createdb "${2:-}" ;;
+  *) echo "usage: $0 {init|start|stop|status|reset|createdb NAME}" >&2; exit 2 ;;
 esac

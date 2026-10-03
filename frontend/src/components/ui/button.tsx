@@ -11,7 +11,7 @@ const VARIANTS = {
   outline: "bg-transparent text-foreground hover:bg-surface-2 border border-border-strong",
   ghost: "bg-transparent text-foreground hover:bg-surface-2 border border-transparent",
   danger: "bg-danger text-white dark:text-[#1a0b0d] hover:opacity-90 border border-transparent",
-  link: "bg-transparent text-primary underline-offset-4 hover:underline border border-transparent px-0",
+  link: "bg-transparent text-primary underline underline-offset-4 hover:decoration-2 border border-transparent px-0",
 } as const;
 
 const SIZES = {

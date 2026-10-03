@@ -142,7 +142,7 @@ export function WorkspaceDashboard() {
             <h2 id="recent-heading" className="text-base font-semibold">
               Recent investigations
             </h2>
-            <Link href="/investigations" className="text-[13px] text-primary hover:underline">
+            <Link href="/investigations" className="text-[13px] text-primary underline underline-offset-2 hover:decoration-2">
               Investigation history
             </Link>
           </div>

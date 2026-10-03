@@ -153,7 +153,7 @@ function LinkList({ finding, onOpenEvidence }: { finding: FindingDetail; onOpenE
           return (
             <li key={link.id} className={cn("space-y-1.5 rounded-md border border-border p-3 text-sm", link.dismissed && "opacity-70")}>
               <div className="flex flex-wrap items-center gap-1.5">
-                <button type="button" onClick={() => onOpenEvidence(ev.id)} className="font-mono text-xs font-semibold text-primary hover:underline">
+                <button type="button" onClick={() => onOpenEvidence(ev.id)} className="font-mono text-xs font-semibold text-primary underline underline-offset-2 hover:decoration-2">
                   {ev.label}
                 </button>
                 <span className={cn("badge rounded-sm border px-1 text-[11px] font-medium", STANCES[link.stance]?.className)}>{STANCES[link.stance]?.label ?? link.stance}</span>

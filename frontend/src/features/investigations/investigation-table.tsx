@@ -30,7 +30,7 @@ export function InvestigationTable({ items, caption }: { items: InvestigationSum
           {items.map((inv) => (
             <tr key={inv.id} className="hover:bg-surface-2/60">
               <Td className="font-mono text-xs whitespace-nowrap">
-                <Link href={`/investigations/${inv.id}`} className="text-primary hover:underline">
+                <Link href={`/investigations/${inv.id}`} className="text-primary underline underline-offset-2 hover:decoration-2">
                   {inv.ref}
                 </Link>
               </Td>

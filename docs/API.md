@@ -16,7 +16,7 @@ request is authenticated by the session cookie and protected against CSRF.
 | Authentication | `__Host-ae_sid` session cookie (`HttpOnly`, `Secure`, `SameSite=Strict`). Sign-in is two steps (`auth/login` → `auth/mfa/verify`); until MFA is enrolled only the enrollment endpoints work |
 | CSRF | Unsafe methods need `X-CSRF-Token` (from `GET auth/session`, or `GET auth/csrf` for anonymous forms) and a same-origin `Origin` header |
 | Step-up | Sensitive actions return `401 reauth-required` unless the password was confirmed (`POST auth/reauth`) in the last 5 minutes |
-| Pagination | `?limit=` (≤ 100) and `?cursor=`; responses are `{items, next_cursor, has_more}`. Cursors are signed and bound to the filters they were issued for |
+| Pagination | Sources, evidence, findings and entities take `?limit=` (≤ 100) and `?cursor=` and return `{items, next_cursor, has_more}`; cursors are signed and bound to the filters they were issued for. Other lists are plain arrays |
 | Concurrency | Investigations, findings and reports return an `ETag` (`"<version>"`). Status transitions, finding edits and report finalization require `If-Match` (`428` without it, `412` on mismatch) |
 | Idempotency | `Idempotency-Key` is required for image uploads and accepted for collection runs, assistant requests and public-occurrence searches |
 | Session headers | Authenticated responses carry `X-Session-Idle-Expires-In` and `X-Session-Absolute-Expires-In` (seconds). Requests with `X-Angel-Activity: background` (polling) do not extend the idle timer |
@@ -240,7 +240,7 @@ CSRF=$(curl -s -b "$JAR" -c "$JAR" -H "Origin: $ORIGIN" -H "X-CSRF-Token: $CSRF"
        -d '{"email":"you@org.example","password":"…"}' "$BASE/auth/login" | jq -r .csrf_token)
 curl -s -b "$JAR" -c "$JAR" -H "Origin: $ORIGIN" -H "X-CSRF-Token: $CSRF" -H 'Content-Type: application/json' \
      -d '{"code":"123456"}' "$BASE/auth/mfa/verify" > /dev/null
-curl -s -b "$JAR" "$BASE/investigations" | jq '.items[] | {ref: .public_ref, status}'
+curl -s -b "$JAR" "$BASE/investigations" | jq '.[] | {ref, title, status}'
 ```
 
 Scripted access is meant for operators testing their own deployment; investigation work belongs in the web

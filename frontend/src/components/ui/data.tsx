@@ -2,6 +2,7 @@
 
 import { ArrowDown, ArrowUp, ArrowUpDown } from "lucide-react";
 import { Tabs as T } from "radix-ui";
+import { useEffect, useRef, useState } from "react";
 
 import { cn } from "@/lib/utils";
 
@@ -50,9 +51,31 @@ export function Badge({ className, children }: { className?: string; children: R
   );
 }
 
+/** True while the element's content is wider than the element (it scrolls horizontally). */
+function useHorizontalOverflow(ref: React.RefObject<HTMLElement | null>): boolean {
+  const [overflowing, setOverflowing] = useState(false);
+  useEffect(() => {
+    const element = ref.current;
+    if (!element || typeof ResizeObserver === "undefined") return;
+    // ResizeObserver reports once on observe, then on every size change of the wrapper or the table.
+    const observer = new ResizeObserver(() => setOverflowing(element.scrollWidth > element.clientWidth + 1));
+    observer.observe(element);
+    if (element.firstElementChild) observer.observe(element.firstElementChild);
+    return () => observer.disconnect();
+  }, [ref]);
+  return overflowing;
+}
+
 export function Table({ caption, children, className }: { caption?: string; children: React.ReactNode; className?: string }) {
+  const ref = useRef<HTMLDivElement>(null);
+  // A table that scrolls sideways (narrow screens) must be reachable by keyboard to scroll it (WCAG 2.1.1).
+  const scrollable = useHorizontalOverflow(ref);
   return (
-    <div className={cn("overflow-x-auto scrollbar-thin", className)}>
+    <div
+      ref={ref}
+      className={cn("overflow-x-auto scrollbar-thin", className)}
+      {...(scrollable ? { tabIndex: 0, role: "region", "aria-label": caption ? `${caption} (scrolls sideways)` : "Table (scrolls sideways)" } : {})}
+    >
       <table className="w-full border-collapse text-[13px]">
         {caption ? <caption className="sr-only">{caption}</caption> : null}
         {children}

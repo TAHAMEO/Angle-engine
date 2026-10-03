@@ -26,7 +26,7 @@ function inline(text: string, keyBase: string): React.ReactNode[] {
       const [, label, href] = link;
       if (href!.startsWith("/")) {
         return (
-          <Link key={key} href={href!} className="text-primary hover:underline">
+          <Link key={key} href={href!} className="text-primary underline underline-offset-2 hover:decoration-2">
             {label}
           </Link>
         );

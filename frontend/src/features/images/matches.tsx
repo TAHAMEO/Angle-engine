@@ -63,7 +63,7 @@ function SimilarImages({ image }: { image: ImageDetail }) {
             {data.matches.map((match) => (
               <tr key={match.image_id}>
                 <Td className="font-mono text-xs">
-                  <Link href={`/investigations/${match.investigation_id}/images/${match.image_id}`} className="text-primary hover:underline">
+                  <Link href={`/investigations/${match.investigation_id}/images/${match.image_id}`} className="text-primary underline underline-offset-2 hover:decoration-2">
                     {match.label}
                   </Link>
                 </Td>
@@ -192,7 +192,7 @@ export function LinkedPanel({ image }: { image: ImageDetail }) {
           <ul className="space-y-1">
             {image.evidence.map((item) => (
               <li key={item.id} className="text-sm">
-                <Link href={`${path(inv.id, "evidence")}?tab=items&evidence=${item.id}`} className="font-mono text-primary hover:underline">
+                <Link href={`${path(inv.id, "evidence")}?tab=items&evidence=${item.id}`} className="font-mono text-primary underline underline-offset-2 hover:decoration-2">
                   {item.label}
                 </Link>{" "}
                 <span className="text-muted">{humanize(item.kind)}</span>
@@ -209,7 +209,7 @@ export function LinkedPanel({ image }: { image: ImageDetail }) {
           <ul className="space-y-1">
             {image.findings.map((item) => (
               <li key={item.id} className="text-sm">
-                <Link href={`${path(inv.id, "evidence")}?finding=${item.id}`} className="font-mono text-primary hover:underline">
+                <Link href={`${path(inv.id, "evidence")}?finding=${item.id}`} className="font-mono text-primary underline underline-offset-2 hover:decoration-2">
                   {item.label}
                 </Link>{" "}
                 <span className="text-muted">{item.verification_status ? humanize(item.verification_status) : ""}</span>

@@ -321,6 +321,7 @@ export function AppShell({ session, children }: { session: Session; children: Re
               <Button
                 variant={assistantOpen ? "primary" : "ghost"}
                 size="sm"
+                aria-label="Assistant"
                 aria-pressed={assistantOpen}
                 onClick={() => setAssistantOpen(!assistantOpen)}
               >

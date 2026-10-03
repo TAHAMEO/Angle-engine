@@ -50,7 +50,7 @@ export function RequestAccessForm() {
           An administrator will review your request. You will be able to sign in once it is approved, and you will set up
           multi-factor authentication at your first sign-in.
         </Alert>
-        <Link href="/login" className="text-sm text-primary hover:underline">Back to sign in</Link>
+        <Link href="/login" className="text-sm text-primary underline underline-offset-2 hover:decoration-2">Back to sign in</Link>
       </div>
     );
   }

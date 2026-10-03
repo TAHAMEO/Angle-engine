@@ -20,6 +20,7 @@ out/
 *.tsbuildinfo
 next-env.d.ts
 playwright-report/
+frontend/e2e/.auth/
 test-results/
 blob-report/
 .pnpm-store/

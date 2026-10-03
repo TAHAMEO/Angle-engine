@@ -112,7 +112,7 @@ export function EvidenceItemsTable({ onOpen }: { onOpen: (id: string) => void })
                   <Td>
                     <button
                       type="button"
-                      className="font-mono text-xs font-semibold text-primary hover:underline"
+                      className="font-mono text-xs font-semibold text-primary underline underline-offset-2 hover:decoration-2"
                       onClick={(event) => {
                         event.stopPropagation();
                         onOpen(item.id);
@@ -237,13 +237,13 @@ export function EvidenceDrawer({ evidenceId, onClose, onOpenFinding }: { evidenc
                 "Source",
                 item.source ? (
                   <span key="s">
-                    <Link href={`${path(inv.id, "sources")}/${item.source.id}`} className="font-mono text-primary hover:underline">
+                    <Link href={`${path(inv.id, "sources")}/${item.source.id}`} className="font-mono text-primary underline underline-offset-2 hover:decoration-2">
                       {item.source.label}
                     </Link>{" "}
                     <ExternalLink href={item.source.url} />
                   </span>
                 ) : item.origin_image_id ? (
-                  <Link key="i" href={`${path(inv.id, "images")}/${item.origin_image_id}`} className="text-primary hover:underline">
+                  <Link key="i" href={`${path(inv.id, "images")}/${item.origin_image_id}`} className="text-primary underline underline-offset-2 hover:decoration-2">
                     Uploaded image
                   </Link>
                 ) : (

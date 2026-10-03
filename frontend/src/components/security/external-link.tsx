@@ -40,7 +40,7 @@ export function ExternalLink({
       target="_blank"
       rel="noopener noreferrer nofollow"
       referrerPolicy="no-referrer"
-      className={cn("inline-flex max-w-full items-baseline gap-1 break-all text-primary hover:underline", className)}
+      className={cn("inline-flex max-w-full items-baseline gap-1 break-all text-primary underline underline-offset-2 hover:decoration-2", className)}
       title="Opens the live page in a new tab — the site will see your IP address"
     >
       <span className="min-w-0">{children ?? (showHost ? displayHost(safe) : safe)}</span>

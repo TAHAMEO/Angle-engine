@@ -42,7 +42,7 @@ function SupportList({ support }: { support: EdgeSupport[] }) {
             {humanize(s.stance)}
           </span>
           {s.source_id ? (
-            <Link href={`${path(inv.id, "sources")}/${s.source_id}`} className="text-xs text-primary hover:underline">
+            <Link href={`${path(inv.id, "sources")}/${s.source_id}`} className="text-xs text-primary underline underline-offset-2 hover:decoration-2">
               {s.source_label} · {s.host}
             </Link>
           ) : (

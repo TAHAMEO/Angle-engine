@@ -91,7 +91,7 @@ export function EvidenceExcerpt({ item }: { item: EvidenceOut }) {
   return (
     <li className="space-y-1.5 rounded-md border border-border p-3 text-sm">
       <div className="flex flex-wrap items-center gap-1.5">
-        <Link href={`${path(inv.id, "evidence")}?tab=items&evidence=${item.id}`} className="font-mono text-xs font-semibold text-primary hover:underline">
+        <Link href={`${path(inv.id, "evidence")}?tab=items&evidence=${item.id}`} className="font-mono text-xs font-semibold text-primary underline underline-offset-2 hover:decoration-2">
           {item.label}
         </Link>
         <ProvenanceBadge provenance={item.provenance} size="sm" />

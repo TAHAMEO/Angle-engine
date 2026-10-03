@@ -75,7 +75,10 @@ make worker                      # background jobs
 make web-install web-dev         # Next.js on http://localhost:3000
 ```
 
-Checks: `make lint typecheck test` (backend), `make web-check` (web), `make compose-config` (deployment).
+Checks: `make lint typecheck test` (backend), `make web-check` (web), `make e2e` (Playwright end-to-end suite with
+axe accessibility scans in dark, light and mobile layouts, against a production build and a disposable seeded
+backend), `make compose-config` (deployment). CI (`.github/workflows/ci.yml`) runs all of them, on Python 3.11 and
+3.12, and also builds the Docker images and smoke-tests the offline demo stack.
 
 ### Production
 

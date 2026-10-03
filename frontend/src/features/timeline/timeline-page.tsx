@@ -225,7 +225,7 @@ function EventItem({ event, onStatus, onDelete }: { event: EventOut; onStatus: (
           </Link>
         ))}
         {event.finding_id ? (
-          <Link href={`${path(inv.id, "evidence")}?finding=${event.finding_id}`} className="font-mono text-xs text-primary hover:underline">
+          <Link href={`${path(inv.id, "evidence")}?finding=${event.finding_id}`} className="font-mono text-xs text-primary underline underline-offset-2 hover:decoration-2">
             {event.finding_label ?? "Finding"}
           </Link>
         ) : null}

@@ -146,7 +146,7 @@ export function LoginForm() {
         )}
       </Card>
       <p className="text-center text-sm text-muted">
-        No account? <Link href="/request-access" className="text-primary hover:underline">Request access</Link> — an
+        No account? <Link href="/request-access" className="text-primary underline underline-offset-2 hover:decoration-2">Request access</Link> — an
         administrator approves every account.
       </p>
     </div>

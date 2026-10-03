@@ -134,7 +134,7 @@ export function SourcesTable() {
               {rows.map((source) => (
                 <tr key={source.id} className="hover:bg-surface-2/60">
                   <Td className="whitespace-nowrap">
-                    <Link href={`${path(inv.id, "sources")}/${source.id}`} className="inline-flex items-center gap-1.5 text-primary hover:underline">
+                    <Link href={`${path(inv.id, "sources")}/${source.id}`} className="inline-flex items-center gap-1.5 text-primary underline underline-offset-2 hover:decoration-2">
                       <Globe className="h-3.5 w-3.5 shrink-0 text-muted" aria-hidden />
                       <span className="font-mono text-xs">{source.label}</span>
                     </Link>

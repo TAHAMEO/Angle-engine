@@ -87,9 +87,10 @@ export function DensityChart({ events, onRange }: { events: EventOut[]; onRange:
           </tbody>
         </Table>
       ) : (
-        <div className="h-44" aria-hidden>
+        // Not aria-hidden: the range handles are keyboard sliders. The bars are summarised by the table view.
+        <div className="h-44">
           <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={buckets} margin={{ top: 4, right: 8, bottom: 0, left: -24 }}>
+            <BarChart data={buckets} margin={{ top: 4, right: 8, bottom: 0, left: -24 }} accessibilityLayer={false}>
               <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" vertical={false} />
               <XAxis dataKey="key" tick={{ fill: "var(--muted)", fontSize: 11 }} stroke="var(--border-strong)" />
               <YAxis allowDecimals={false} tick={{ fill: "var(--muted)", fontSize: 11 }} stroke="var(--border-strong)" />
