@@ -35,6 +35,9 @@ def storefront(*, marker: bool = True, size: tuple[int, int] = (1600, 1000), qua
     d.text((120, 740), "HARBOUR STREET  LISBON", font=mid, fill=(10, 10, 10))
     if marker:  # stand-in for a person in the photo (detected and blurred, never identified)
         d.rectangle([1300, 560, 1460, 760], fill=MAGENTA)
+        # A pictogram inside the marker gives the preview's blur something visible to remove.
+        d.ellipse([1345, 590, 1415, 660], outline=(20, 20, 20), width=6)
+        d.arc([1320, 672, 1440, 792], start=180, end=360, fill=(20, 20, 20), width=6)
     if size != img.size:
         img = img.resize(size)
     exif = Image.Exif()

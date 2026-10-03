@@ -9,7 +9,7 @@ issues for vulnerabilities.
 - **Passwords**: Argon2id (argon2-cffi, RFC 9106 profile), 12–128 characters, checked against a common-password
   list and the person's name/e-mail; no forced rotation; hashing runs in a bounded thread pool; unknown e-mail
   addresses get a dummy verification so timing does not reveal accounts. Identical error messages for every
-  failure.
+  failure; access requests answer identically, and take as long, whether or not the address is registered.
 - **Multi-factor authentication is mandatory for every role**: TOTP (SHA-1, 6 digits, 30 s, ±1 step) with replay
   protection (a time step can be used once), 10 single-use recovery codes stored as keyed hashes. Until enrolled,
   a session can only reach the enrollment endpoints.
@@ -37,6 +37,7 @@ issues for vulnerabilities.
   |---|---|---|
   | Sign-in per account / per IP | 5 / min · 20 / min | yes |
   | MFA verification per account | 5 / 5 min | yes |
+  | Step-up re-authentication and password changes per account (one shared budget) | 5 / 5 min | yes |
   | Access requests per IP · abuse reports per IP | 3 / h · 5 / h | yes |
   | Reads · writes per person | 300 / min · 60 / min | no |
   | Uploads per person | 20 / h and 500 MiB / day | yes |
@@ -101,6 +102,8 @@ issues for vulnerabilities.
 - API responses: `CSP: default-src 'none'; frame-ancestors 'none'`, `nosniff`, `no-referrer`, COOP/CORP,
   `Cache-Control: no-store`, HSTS. Report previews are framed only by the app (`frame-ancestors 'self'`) inside
   `sandbox=""` iframes, with their own `sandbox; default-src 'none'` policy.
+- No `eval`: the CSP has no `'unsafe-eval'` and Zod runs in jitless mode. The post-sign-in `?next=` destination must
+  parse to a path on the same origin.
 - No third-party scripts, fonts, analytics, map tiles or CAPTCHAs. AI output and evidence are rendered as text,
   never as HTML; a lint rule forbids `dangerouslySetInnerHTML` and `innerHTML`. Links to sources open with
   `noopener noreferrer`, show punycode host names and warn that the site will see the visitor's IP address.
