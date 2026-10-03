@@ -46,6 +46,9 @@ def _scrub(_: Any, __: str, event_dict: MutableMapping[str, Any]) -> MutableMapp
 
 def configure_logging(level: str = "INFO", json_output: bool = False) -> None:
     logging.basicConfig(format="%(message)s", stream=sys.stdout, level=level.upper())
+    # Uvicorn's access log prints client addresses and full query strings (search terms). Caddy keeps a redacted
+    # access log instead, so the application never writes one, whatever flags uvicorn was started with.
+    logging.getLogger("uvicorn.access").disabled = True
     renderer: Any = structlog.processors.JSONRenderer() if json_output else structlog.dev.ConsoleRenderer()
     structlog.configure(
         processors=[

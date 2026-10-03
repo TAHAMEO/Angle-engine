@@ -36,4 +36,4 @@ ENV ANGEL_ENV=production \
 EXPOSE 8000
 ENTRYPOINT ["/usr/bin/tini", "--"]
 # Behind Caddy on an internal network only; trust its X-Forwarded-For for client-IP pseudonyms.
-CMD ["uvicorn", "angel_engine.main:create_app", "--factory", "--host", "0.0.0.0", "--port", "8000", "--proxy-headers", "--forwarded-allow-ips", "*", "--no-server-header"]
+CMD ["uvicorn", "angel_engine.main:create_app", "--factory", "--host", "0.0.0.0", "--port", "8000", "--proxy-headers", "--forwarded-allow-ips", "*", "--no-server-header", "--no-access-log"]

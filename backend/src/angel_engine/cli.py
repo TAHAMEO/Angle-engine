@@ -1,6 +1,7 @@
 """Administrative command line.
 
-``angel-engine keys init`` · ``angel-engine create-admin`` · ``angel-engine seed-demo`` · ``angel-engine openapi``
+``angel-engine keys init|list|rotate|destroy-kek`` · ``angel-engine create-admin`` · ``angel-engine seed-demo`` ·
+``angel-engine openapi``
 """
 
 from __future__ import annotations
@@ -21,11 +22,81 @@ def _keys_init(args: argparse.Namespace) -> int:
 
     settings = get_settings()
     path = settings.keyring_path
-    if path.exists() and not args.force:
+    if path.exists():
         print(f"keyring already exists at {path}")  # noqa: T201
         return 0
     FileKeyring(path, create=True)
     print(f"created keyring at {path} (mode 0600) — store it outside database backups")  # noqa: T201
+    return 0
+
+
+async def _keys_list() -> None:
+    from sqlalchemy import func
+
+    from angel_engine.app_state import build_services
+    from angel_engine.db.models import DataKey
+
+    svc = build_services(get_settings())
+    try:
+        async with svc.db.session("maintenance") as db:
+            rows = await db.execute(
+                select(DataKey.kek_id, func.count()).where(DataKey.status != "destroyed").group_by(DataKey.kek_id)
+            )
+            wrapped: dict[str, int] = dict(rows.tuples().all())
+        for info in svc.keys.list_keks():
+            state = "active " if info.active else "retired"
+            print(f"{info.kek_id}  {state}  created {info.created_at[:19]}  wraps {wrapped.get(info.kek_id, 0)} keys")  # noqa: T201
+    finally:
+        await svc.close()
+
+
+def _keys_list_cmd(args: argparse.Namespace) -> int:
+    asyncio.run(_keys_list())
+    return 0
+
+
+async def _keys_rotate() -> dict[str, object]:
+    from angel_engine.app_state import build_services
+    from angel_engine.jobs.maintenance import rotate_and_rewrap
+
+    svc = build_services(get_settings())
+    try:
+        return await rotate_and_rewrap(svc, trigger="cli")
+    finally:
+        await svc.close()
+
+
+def _keys_rotate_cmd(args: argparse.Namespace) -> int:
+    result = asyncio.run(_keys_rotate())
+    print(f"new KEK {result['kek_id']}; re-wrapped {result['rewrapped']} data keys")  # noqa: T201
+    return 0
+
+
+async def _keys_destroy(kek_id: str) -> None:
+    from angel_engine.app_state import build_services
+    from angel_engine.crypto.keys import KeyringError
+    from angel_engine.jobs.maintenance import destroy_retired_kek
+
+    svc = build_services(get_settings())
+    try:
+        await destroy_retired_kek(svc, kek_id)
+    except KeyringError as exc:
+        raise SystemExit(str(exc)) from exc
+    finally:
+        await svc.close()
+
+
+def _keys_destroy_cmd(args: argparse.Namespace) -> int:
+    if not args.yes:
+        if not sys.stdin.isatty():
+            raise SystemExit("refusing to destroy a KEK without --yes")
+        print(  # noqa: T201
+            "Destroying a KEK makes every database backup taken while it was active permanently unreadable."
+        )
+        if input(f"Type {args.kek_id} to confirm: ").strip() != args.kek_id:
+            raise SystemExit("not confirmed")
+    asyncio.run(_keys_destroy(args.kek_id))
+    print(f"destroyed {args.kek_id}; also remove it from keyring backups that still contain it")  # noqa: T201
     return 0
 
 
@@ -115,9 +186,18 @@ def main(argv: list[str] | None = None) -> int:
     sub = parser.add_subparsers(dest="command", required=True)
     keys = sub.add_parser("keys", help="key management")
     keys_sub = keys.add_subparsers(dest="keys_command", required=True)
-    init = keys_sub.add_parser("init", help="create the keyring file")
-    init.add_argument("--force", action="store_true")
+    init = keys_sub.add_parser("init", help="create the keyring file (never overwrites an existing one)")
     init.set_defaults(func=_keys_init)
+    keys_sub.add_parser("list", help="list KEK epochs and how many data keys each wraps").set_defaults(
+        func=_keys_list_cmd
+    )
+    keys_sub.add_parser("rotate", help="start a new KEK epoch and re-wrap all data keys").set_defaults(
+        func=_keys_rotate_cmd
+    )
+    destroy = keys_sub.add_parser("destroy-kek", help="destroy a retired KEK (after the backup-retention window)")
+    destroy.add_argument("kek_id")
+    destroy.add_argument("--yes", action="store_true", help="skip the interactive confirmation")
+    destroy.set_defaults(func=_keys_destroy_cmd)
     admin = sub.add_parser("create-admin", help="create the first administrator")
     admin.add_argument("--email", required=True)
     admin.add_argument("--name", required=True)

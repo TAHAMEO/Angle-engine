@@ -6,11 +6,13 @@ from datetime import timedelta
 from typing import Any
 
 import structlog
-from sqlalchemy import delete, text
+from sqlalchemy import delete, func, select, text
 
+from angel_engine.app_state import Services
 from angel_engine.audit.chain import AuditEvent, append_now, verify_chain, write_anchor
 from angel_engine.core.clock import utcnow
-from angel_engine.db.models import IdempotencyKey, UserSession
+from angel_engine.crypto.keys import KeyringError
+from angel_engine.db.models import DataKey, IdempotencyKey, UserSession
 from angel_engine.jobs.registry import JobContext, handler
 
 log = structlog.get_logger(__name__)
@@ -71,9 +73,8 @@ async def destroy_old_ip_keys(ctx: JobContext, payload: dict[str, Any]) -> dict[
     return {"destroyed": removed}
 
 
-@handler("keys.rotate_kek")
-async def rotate_kek(ctx: JobContext, payload: dict[str, Any]) -> dict[str, Any]:
-    svc = ctx.services
+async def rotate_and_rewrap(svc: Services, *, trigger: str) -> dict[str, Any]:
+    """Start a new KEK epoch and re-wrap every live data key under it (scheduled job and CLI)."""
     new_id = svc.keys.rotate_kek()
     async with svc.db.session("maintenance") as db:
         rewrapped = await svc.vault.rewrap_all(db)
@@ -84,8 +85,36 @@ async def rotate_kek(ctx: JobContext, payload: dict[str, Any]) -> dict[str, Any]
                 AuditEvent(
                     action="keys.kek_rotated",
                     actor_type="system",
-                    details={"kek_id": new_id, "rewrapped": rewrapped},
+                    details={"kek_id": new_id, "rewrapped": rewrapped, "trigger": trigger},
                 )
             ],
         )
     return {"kek_id": new_id, "rewrapped": rewrapped}
+
+
+async def destroy_retired_kek(svc: Services, kek_id: str) -> None:
+    """Destroy a retired KEK that no live data key depends on (operator action after the backup window)."""
+    known = {info.kek_id: info for info in svc.keys.list_keks()}
+    if kek_id not in known:
+        raise KeyringError(f"unknown KEK {kek_id}")
+    if known[kek_id].active:
+        raise KeyringError("the active KEK cannot be destroyed; rotate first")
+    async with svc.db.session("maintenance") as db:
+        in_use = (
+            await db.execute(
+                select(func.count()).select_from(DataKey).where(DataKey.kek_id == kek_id, DataKey.status != "destroyed")
+            )
+        ).scalar_one()
+        if in_use:
+            raise KeyringError(f"{in_use} live data keys are still wrapped with {kek_id}; rotate first")
+        svc.keys.destroy_kek(kek_id)
+        await append_now(
+            db,
+            svc.audit_key,
+            [AuditEvent(action="keys.kek_destroyed", actor_type="system", details={"kek_id": kek_id})],
+        )
+
+
+@handler("keys.rotate_kek")
+async def rotate_kek(ctx: JobContext, payload: dict[str, Any]) -> dict[str, Any]:
+    return await rotate_and_rewrap(ctx.services, trigger="schedule")

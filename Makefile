@@ -42,7 +42,7 @@ typecheck: ## Type-check the backend
 
 .PHONY: api
 api: ## Run the API with auto-reload (development)
-	cd $(BACKEND) && .venv/bin/uvicorn angel_engine.main:create_app --factory --reload --port 8000
+	cd $(BACKEND) && .venv/bin/uvicorn angel_engine.main:create_app --factory --reload --port 8000 --no-access-log
 
 .PHONY: worker
 worker: ## Run the background worker (all queues)
