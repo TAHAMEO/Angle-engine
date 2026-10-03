@@ -4,7 +4,7 @@ import { Suspense } from "react";
 import { LoadingBlock } from "@/components/ui/feedback";
 import { SourcesPage } from "@/features/sources/sources-page";
 
-export const metadata: Metadata = { title: "Sources · Angel Engine" };
+export const metadata: Metadata = { title: "Sources" };
 
 export default function Page() {
   return (

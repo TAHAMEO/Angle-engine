@@ -113,7 +113,8 @@ export function ImageUpload({ investigationId }: { investigationId: string }) {
           isDragActive ? "border-primary bg-primary/5" : "border-border-strong/60 bg-surface",
         )}
       >
-        <input {...getInputProps()} aria-label="Choose images to upload" />
+        {/* The visible "Choose images" button opens this input; hide the duplicate control from assistive tech. */}
+        <input {...getInputProps()} aria-label="Image files" aria-hidden="true" />
         <ImageUp className="h-8 w-8 text-muted" aria-hidden />
         <div className="space-y-1">
           <p className="font-medium">{isDragActive ? "Drop the images to upload them" : "Drag images here, or choose files"}</p>

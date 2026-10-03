@@ -4,7 +4,7 @@ import { Suspense } from "react";
 import { LoadingBlock } from "@/components/ui/feedback";
 import { EvidencePage } from "@/features/evidence/evidence-page";
 
-export const metadata: Metadata = { title: "Evidence · Angel Engine" };
+export const metadata: Metadata = { title: "Evidence" };
 
 export default function Page() {
   return (

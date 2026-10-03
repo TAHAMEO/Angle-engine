@@ -274,6 +274,23 @@ function RouteFocusManager() {
   return null;
 }
 
+/** Apply account preferences: density as a root attribute, and the saved theme once per sign-in. */
+function PreferenceSync({ user }: { user: User }) {
+  const { setTheme } = useTheme();
+  const prefs = (user.preferences ?? {}) as { density?: string; theme?: string };
+  const applied = useRef(false);
+  useEffect(() => {
+    document.documentElement.dataset.density = prefs.density === "compact" ? "compact" : "comfortable";
+  }, [prefs.density]);
+  useEffect(() => {
+    if (!applied.current && prefs.theme) {
+      applied.current = true;
+      setTheme(prefs.theme);
+    }
+  }, [prefs.theme, setTheme]);
+  return null;
+}
+
 // ------------------------------------------------------------------------------------------- shell
 export function AppShell({ session, children }: { session: Session; children: React.ReactNode }) {
   const user = session.user as User;
@@ -329,6 +346,7 @@ export function AppShell({ session, children }: { session: Session; children: Re
       </Sheet>
       <SessionExpiryModal />
       <ReauthDialogHost />
+      <PreferenceSync user={user} />
       <RouteFocusManager />
     </AssistantContext.Provider>
   );

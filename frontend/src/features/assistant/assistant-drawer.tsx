@@ -1,7 +1,7 @@
 "use client";
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Bot, Check, History, ListChecks, Send, Sparkles, X } from "lucide-react";
+import { Bot, Check, History, ListChecks, Loader2, Send, Sparkles, X } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
@@ -197,7 +197,7 @@ export function InteractionView({ interaction, investigationId, canWrite }: { in
   if (!TERMINAL.has(interaction.status)) {
     return (
       <div role="status" className="flex items-center gap-2 rounded-md border border-border p-3 text-sm text-muted">
-        <Spinner className="h-4 w-4" label="Working" />
+        <Loader2 className="h-4 w-4 animate-spin" aria-hidden />
         Reading {interaction.context_documents || "the"} evidence document{interaction.context_documents === 1 ? "" : "s"}…
       </div>
     );

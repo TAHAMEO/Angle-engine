@@ -53,7 +53,13 @@ const middleware: Middleware = {
   },
 };
 
-export const api = createClient<paths>({ baseUrl: "", credentials: "same-origin" });
+// Absolute same-origin URLs (Request() outside a browser document cannot resolve relative ones).
+export const api = createClient<paths>({
+  baseUrl: typeof window === "undefined" ? "" : window.location.origin,
+  credentials: "same-origin",
+  // Late-bound so tests (and any fetch instrumentation) see the current global.
+  fetch: (request: Request) => globalThis.fetch(request),
+});
 api.use(middleware);
 
 interface FetchResult<T> {

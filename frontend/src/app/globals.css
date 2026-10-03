@@ -150,6 +150,13 @@
   }
 }
 
+/* Compact density (account preference): tighter tables and lists. */
+[data-density="compact"] td,
+[data-density="compact"] th {
+  padding-top: 0.25rem;
+  padding-bottom: 0.25rem;
+}
+
 @layer utilities {
   .tabular {
     font-variant-numeric: tabular-nums;

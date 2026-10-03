@@ -29,6 +29,9 @@ importers:
       date-fns:
         specifier: 4.4.0
         version: 4.4.0
+      get-nonce:
+        specifier: 1.0.1
+        version: 1.0.1
       lucide-react:
         specifier: 1.50.0
         version: 1.50.0(@types/react@19.3.0)(react@19.3.0)

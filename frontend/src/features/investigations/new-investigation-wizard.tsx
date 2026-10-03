@@ -134,6 +134,20 @@ export function NewInvestigationWizard() {
       setPreflight(result);
       return result.decision !== "refuse";
     } catch (error) {
+      if (error instanceof PolicyRefusalError) {
+        // Refusals are recorded server-side and come back as a policy-refused problem.
+        const policy = error.policy;
+        setPreflight({
+          decision: "refuse",
+          categories: policy.categories,
+          notices: policy.notices ?? [],
+          rationale: policy.rationale ?? "",
+          alternatives: (policy.alternatives ?? []).map((a) => ({ ...a })),
+          requires_acknowledgement: false,
+          requires_review: false,
+        });
+        return false;
+      }
       toast("The purpose could not be checked", { description: messageOf(error), tone: "danger" });
       return false;
     }
