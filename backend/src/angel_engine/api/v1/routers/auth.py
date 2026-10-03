@@ -444,8 +444,11 @@ async def change_password(
 ) -> dict[str, str]:
     svc = get_services(request)
     user = principal.user
+    # Same budget as re-authentication: a stolen session must not become a password-guessing oracle.
+    await enforce_rate_limit(svc, f"reauth:{principal.user_id}", MFA_ACCOUNT)
     ok, _ = await passwords.verify_password(user.password_hash, body.current_password)
     if not ok:
+        await audit_separately(svc, principal.event("auth.password_change", outcome="failure"))
         raise Unauthenticated("The current password is not correct.", code="invalid_credentials")
     problems = passwords.policy_violations(
         body.new_password, context_words=(user.email.split("@")[0], user.display_name, "angel engine")

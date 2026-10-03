@@ -8,10 +8,18 @@ import pytest
 from sqlalchemy import select, update
 
 from angel_engine.core.clock import utcnow
-from angel_engine.db.models import User, UserSession
+from angel_engine.db.models import AuditLog, User, UserSession
 from tests.helpers import PASSWORD, anonymous_csrf, create_user, csrf_headers, login, totp_code
 
 pytestmark = pytest.mark.db
+
+
+async def audit_actions(services, user_id, actions) -> list[tuple[str, str]]:
+    async with services.db.session("maintenance") as db:
+        rows = await db.execute(
+            select(AuditLog.action, AuditLog.outcome).where(AuditLog.actor_id == user_id, AuditLog.action.in_(actions))
+        )
+        return [(action, outcome) for action, outcome in rows.all()]
 
 
 async def test_login_requires_csrf_token(client, services):
@@ -202,6 +210,24 @@ async def test_password_change_revokes_other_sessions(client, anon_client, servi
     assert resp.status_code == 200, resp.text
     assert (await client.get("/api/v1/me")).status_code == 200
     assert (await anon_client.get("/api/v1/me")).status_code == 401
+
+
+async def test_password_guessing_with_a_session_is_rate_limited(client, services):
+    """Change-password and re-authentication share one small budget, so a stolen session cannot guess passwords."""
+    user = await create_user(services)
+    await login(client, user)
+    statuses = []
+    for attempt in range(6):
+        guess = f"wrong-guess-{attempt:04d}"
+        if attempt % 2:
+            payload = {"current_password": guess, "new_password": "x" * 16}
+            resp = await client.put("/api/v1/auth/password", json=payload, headers=csrf_headers(client))
+        else:
+            resp = await client.post("/api/v1/auth/reauth", json={"password": guess}, headers=csrf_headers(client))
+        statuses.append(resp.status_code)
+    assert statuses == [401, 401, 401, 401, 401, 429]
+    rows = await audit_actions(services, user.id, ("auth.reauth", "auth.password_change"))
+    assert rows.count(("auth.password_change", "failure")) == 2 and rows.count(("auth.reauth", "failure")) == 3
 
 
 async def test_weak_password_rejected(client, services):

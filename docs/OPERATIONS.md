@@ -248,7 +248,8 @@ refused requests before clearing a flag.
 
 `make demo` starts the stack on `https://localhost` with fixture connectors, the offline demo AI, the built-in
 scanner and fictional `.example` data, and loads demo accounts with a fixed password and fixed TOTP secrets
-printed by the seed. **Never expose a demo deployment to a network**: its credentials are public.
+printed by the seed. The demo override publishes Caddy on 127.0.0.1 only. **Never expose a demo deployment to a
+network**: its credentials are public.
 
 ## Limits of this deployment model
 

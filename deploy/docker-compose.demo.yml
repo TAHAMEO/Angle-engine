@@ -24,3 +24,7 @@ services:
   caddy:
     environment:
       ANGEL_TLS_DIRECTIVE: tls internal
+    # The demo's credentials are public: reachable from this machine only.
+    ports: !override
+      - "127.0.0.1:80:80"
+      - "127.0.0.1:443:443"
