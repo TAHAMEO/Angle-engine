@@ -1,6 +1,6 @@
 """Administrative command line.
 
-``angel-engine keys init`` · ``angel-engine create-admin`` · ``angel-engine seed-demo``
+``angel-engine keys init`` · ``angel-engine create-admin`` · ``angel-engine seed-demo`` · ``angel-engine openapi``
 """
 
 from __future__ import annotations
@@ -93,6 +93,23 @@ def _seed_demo_cmd(args: argparse.Namespace) -> int:
     return 0
 
 
+def _openapi_cmd(args: argparse.Namespace) -> int:
+    """Write the OpenAPI document (the web client generates its types from this snapshot)."""
+    import json
+    from pathlib import Path
+
+    from angel_engine.config import Settings
+    from angel_engine.main import create_app
+
+    document = create_app(Settings(env="development")).openapi()
+    text = json.dumps(document, indent=2, sort_keys=True, ensure_ascii=False) + "\n"
+    if args.output == "-":
+        sys.stdout.write(text)
+    else:
+        Path(args.output).write_text(text, encoding="utf-8")
+    return 0
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(prog="angel-engine")
     sub = parser.add_subparsers(dest="command", required=True)
@@ -109,6 +126,9 @@ def main(argv: list[str] | None = None) -> int:
     seed = sub.add_parser("seed-demo", help="load the offline demo dataset (development/e2e only)")
     seed.add_argument("--reset", action="store_true")
     seed.set_defaults(func=_seed_demo_cmd)
+    openapi = sub.add_parser("openapi", help="write the OpenAPI document (for generated web-client types)")
+    openapi.add_argument("--output", default="-")
+    openapi.set_defaults(func=_openapi_cmd)
     args = parser.parse_args(argv)
     return int(args.func(args))
 

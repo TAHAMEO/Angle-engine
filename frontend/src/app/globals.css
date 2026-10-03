@@ -1,0 +1,175 @@
+@import "tailwindcss";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+/*
+ * Angel Engine design tokens. Dark is the default theme; every pair below was chosen for WCAG AA contrast on its
+ * surface. Status colours are never the only signal: badges always carry an icon and a text label.
+ */
+:root {
+  --background: #f6f8fb;
+  --surface: #ffffff;
+  --surface-2: #f1f4f9;
+  --surface-3: #e7ecf3;
+  --foreground: #0f1a2b;
+  --muted: #4a5568;
+  --subtle: #5d6b80;
+  --border: #d5dce6;
+  --border-strong: #8794a8;
+  --primary: #0e6fa8;
+  --primary-hover: #0b5d8d;
+  --primary-fg: #ffffff;
+  --ring: #0e6fa8;
+  --danger: #b42323;
+  --danger-bg: #fdecec;
+  --warning: #8a5a00;
+  --warning-bg: #fff6e0;
+  --success: #13703f;
+  --success-bg: #e8f6ee;
+  --info-bg: #e8f2fb;
+
+  --st-confirmed: #13703f;
+  --st-corroborated: #1d5fb8;
+  --st-unverified: #4a5568;
+  --st-contradicted: #b42323;
+  --st-ai: #6d3fc0;
+  --pv-observed: #0f766e;
+  --pv-reported: #8a5a00;
+  --pv-inference: #3d4b63;
+}
+
+.dark {
+  --background: #0b1120;
+  --surface: #0f172a;
+  --surface-2: #162033;
+  --surface-3: #1b2638;
+  --foreground: #e5ecf5;
+  --muted: #a7b4c8;
+  --subtle: #8d9bb2;
+  --border: #26324a;
+  --border-strong: #65789a;
+  --primary: #5cb8e6;
+  --primary-hover: #7cc6ec;
+  --primary-fg: #0b1120;
+  --ring: #5cb8e6;
+  --danger: #f59090;
+  --danger-bg: #2a1518;
+  --warning: #e0b66a;
+  --warning-bg: #2a2214;
+  --success: #5fd08f;
+  --success-bg: #12261c;
+  --info-bg: #13233a;
+
+  --st-confirmed: #5fd08f;
+  --st-corroborated: #6fb2f7;
+  --st-unverified: #a7b4c8;
+  --st-contradicted: #f59090;
+  --st-ai: #c4a5f7;
+  --pv-observed: #5cc8c0;
+  --pv-reported: #e0b66a;
+  --pv-inference: #b8c4d6;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-surface-3: var(--surface-3);
+  --color-foreground: var(--foreground);
+  --color-muted: var(--muted);
+  --color-subtle: var(--subtle);
+  --color-border: var(--border);
+  --color-border-strong: var(--border-strong);
+  --color-primary: var(--primary);
+  --color-primary-hover: var(--primary-hover);
+  --color-primary-fg: var(--primary-fg);
+  --color-ring: var(--ring);
+  --color-danger: var(--danger);
+  --color-danger-bg: var(--danger-bg);
+  --color-warning: var(--warning);
+  --color-warning-bg: var(--warning-bg);
+  --color-success: var(--success);
+  --color-success-bg: var(--success-bg);
+  --color-info-bg: var(--info-bg);
+  --color-st-confirmed: var(--st-confirmed);
+  --color-st-corroborated: var(--st-corroborated);
+  --color-st-unverified: var(--st-unverified);
+  --color-st-contradicted: var(--st-contradicted);
+  --color-st-ai: var(--st-ai);
+  --color-pv-observed: var(--pv-observed);
+  --color-pv-reported: var(--pv-reported);
+  --color-pv-inference: var(--pv-inference);
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: var(--font-jetbrains), ui-monospace, "SFMono-Regular", monospace;
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 8px;
+}
+
+@layer base {
+  html {
+    color-scheme: light;
+    -webkit-text-size-adjust: 100%;
+  }
+  html.dark {
+    color-scheme: dark;
+  }
+  body {
+    background: var(--background);
+    color: var(--foreground);
+    font-family: var(--font-sans);
+    font-size: 14px;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+  }
+  :focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: 2px;
+  }
+  ::selection {
+    background: color-mix(in srgb, var(--primary) 30%, transparent);
+  }
+  table {
+    font-variant-numeric: tabular-nums;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+  @media (forced-colors: active) {
+    .badge,
+    .card {
+      border: 1px solid CanvasText;
+    }
+  }
+}
+
+@layer utilities {
+  .tabular {
+    font-variant-numeric: tabular-nums;
+  }
+  .scrollbar-thin {
+    scrollbar-width: thin;
+  }
+}
+
+/* React Flow (graph) — themed through our tokens. */
+.react-flow {
+  --xy-background-color: var(--background);
+  --xy-node-background-color: var(--surface);
+  --xy-node-border: 1px solid var(--border-strong);
+  --xy-node-color: var(--foreground);
+  --xy-edge-label-background-color: var(--surface);
+  --xy-edge-label-color: var(--foreground);
+  --xy-controls-button-background-color: var(--surface-2);
+  --xy-controls-button-color: var(--foreground);
+  --xy-controls-button-border-color: var(--border);
+  --xy-minimap-background-color: var(--surface);
+  --xy-attribution-background-color: transparent;
+}

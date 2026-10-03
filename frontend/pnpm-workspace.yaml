@@ -1,0 +1,6 @@
+# Dependency install scripts are blocked unless listed here (pnpm 10).
+onlyBuiltDependencies:
+  - "@tailwindcss/oxide"
+  - unrs-resolver
+  - msw
+strictDepBuilds: false
