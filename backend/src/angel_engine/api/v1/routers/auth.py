@@ -512,7 +512,9 @@ async def request_access(body: RegistrationIn, request: Request, db: DbSession, 
         raise ValidationProblem(" ".join(problems), code="weak_password")
     exists = (await db.execute(select(User.id).where(User.email == body.email))).first()
     if exists is not None:
-        return accepted  # do not reveal whether an account exists
+        # Do not reveal whether an account exists, not even through timing: hash as a new request would.
+        await passwords.hash_password(body.password)
+        return accepted
     versions = current_versions()
     user = User(
         email=body.email,
