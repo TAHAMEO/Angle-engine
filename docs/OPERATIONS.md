@@ -271,6 +271,9 @@ scanner and fictional `.example` data, and loads demo accounts with a fixed pass
 printed by the seed. The demo override publishes Caddy on 127.0.0.1 only. **Never expose a demo deployment to a
 network**: its credentials are public.
 
+`seed-demo` refuses a database that already has other accounts, so running `make demo` on a real installation by
+mistake never adds the demo's published accounts to it (`make up` switches back to production settings).
+
 `make demo-stop` stops the demo and keeps its data; `make demo-reset` deletes its containers and volumes. To run
 other Compose commands against the demo, pass the domain, which the demo has no `deploy/.env` for:
 `ANGEL_DOMAIN=localhost docker compose -f deploy/docker-compose.yml -f deploy/docker-compose.demo.yml logs api`.

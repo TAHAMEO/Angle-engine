@@ -386,10 +386,19 @@ async def run_seed(*, reset: bool = False) -> None:
     try:
         async with services.db.session("app") as db:
             exists = (await db.execute(select(User.id).where(User.email == DEMO_USERS[0].email))).first()
+            accounts = (await db.execute(select(User.id).limit(1))).first()
         if exists:
             print("seed-demo: demo users already exist; nothing to do.")  # noqa: T201
             _print_accounts()
             return
+        if accounts:
+            print(  # noqa: T201
+                "seed-demo: this database has accounts but no demo data, so it belongs to a real installation, and the "
+                "demo would add accounts whose passwords are published. Nothing was changed. Run `make up` to go back "
+                "to the real installation.",
+                file=sys.stderr,
+            )
+            raise SystemExit(2)
         app = create_app(services=services)
         await sync_legal_documents(services)
         result = await _seed(services, app, settings)
