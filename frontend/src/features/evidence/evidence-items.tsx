@@ -66,7 +66,7 @@ export function EvidenceItemsTable({ onOpen }: { onOpen: (id: string) => void })
           <span className="font-medium">Keyword</span>
           <Input value={draft} onChange={(e) => setDraft(e.target.value)} autoComplete="off" />
         </label>
-        <label className="space-y-1 text-sm">
+        <label className="flex flex-col gap-1 text-sm">
           <span className="font-medium">Type</span>
           <Select value={type} onChange={(e) => setType(e.target.value)} className="w-48">
             <option value="">All types</option>
@@ -77,7 +77,7 @@ export function EvidenceItemsTable({ onOpen }: { onOpen: (id: string) => void })
             ))}
           </Select>
         </label>
-        <label className="space-y-1 text-sm">
+        <label className="flex flex-col gap-1 text-sm">
           <span className="font-medium">Provenance</span>
           <Select value={provenance} onChange={(e) => setProvenance(e.target.value)} className="w-40">
             <option value="">Any</option>

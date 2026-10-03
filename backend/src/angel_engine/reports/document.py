@@ -17,7 +17,7 @@ import re
 import uuid
 from collections import Counter
 from dataclasses import asdict, dataclass, field
-from datetime import datetime
+from datetime import UTC, datetime
 from typing import Any
 
 from sqlalchemy import select
@@ -135,7 +135,8 @@ def _date(value: datetime | None) -> str | None:
 
 
 def _when(value: datetime | None) -> str | None:
-    return value.isoformat(timespec="minutes") if value else None
+    """UTC timestamp for display ("2026-03-14 09:12 UTC")."""
+    return f"{value.astimezone(UTC):%Y-%m-%d %H:%M} UTC" if value else None
 
 
 class _Data:
@@ -346,7 +347,7 @@ async def build_document(
         investigation_ref=inv.public_ref,
         investigation_title=inv.title,
         status=status,
-        generated_at=utcnow().isoformat(timespec="seconds"),
+        generated_at=utcnow().strftime("%Y-%m-%d %H:%M:%S"),  # rendered with an explicit "UTC" label
         confidentiality=confidentiality or "Confidential",
         restricted_mode=inv.restricted_mode,
         sections=ordered,

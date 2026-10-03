@@ -244,7 +244,14 @@ function History({ finding }: { finding: FindingDetail }) {
               <VerificationStatusBadge status={entry.to_status} size="sm" />
             </p>
             <p className="text-xs text-muted">
-              {formatDateTime(entry.created_at)} · {entry.automatic ? "Automatic (preconditions no longer held)" : (entry.actor_name ?? "Former member")}
+              {formatDateTime(entry.created_at)} ·{" "}
+              {!entry.from_status
+                ? entry.actor_name
+                  ? `Recorded by ${entry.actor_name}`
+                  : "Recorded automatically from collected evidence"
+                : entry.automatic
+                  ? "Automatic (its preconditions no longer held)"
+                  : (entry.actor_name ?? "Former member")}
               {entry.evidence_ids.length ? ` · cites ${entry.evidence_ids.length} evidence item${entry.evidence_ids.length === 1 ? "" : "s"}` : ""}
             </p>
             {entry.justification ? <p className="mt-0.5 text-[13px]">“{entry.justification}”</p> : null}

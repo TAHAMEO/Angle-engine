@@ -53,7 +53,7 @@ function InvestigationList() {
           <span className="font-medium">Search by reference or title</span>
           <Input value={draft} onChange={(event) => setDraft(event.target.value)} placeholder="AE-2026-000123 or a title word" />
         </label>
-        <label className="space-y-1 text-sm">
+        <label className="flex flex-col gap-1 text-sm">
           <span className="font-medium">Status</span>
           <Select
             value={status}

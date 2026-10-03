@@ -305,7 +305,7 @@ function AskPanel({ onCreated }: { onCreated: (interaction: InteractionOut) => v
     },
   });
   const needsText = meta.input === "question" || meta.input === "conclusion";
-  if (!can("ai:use")) {
+  if (!can("content:write")) {
     return <Alert tone="info">You can read assistant answers, but your role cannot send requests in this investigation.</Alert>;
   }
   return (

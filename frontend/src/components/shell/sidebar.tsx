@@ -46,6 +46,19 @@ export function investigationNav(id: string): NavItem[] {
   ];
 }
 
+/** Admins and auditors manage the platform; they never see investigation content. */
+export function canUseInvestigations(user: User): boolean {
+  return ["supervisor", "investigator", "viewer"].includes(user.role);
+}
+
+export function workspaceNav(user: User): NavItem[] {
+  return WORKSPACE_NAV.filter(
+    (item) =>
+      item.href === "/dashboard" ||
+      (canUseInvestigations(user) && (item.href !== "/investigations/new" || user.role !== "viewer")),
+  );
+}
+
 export const WORKSPACE_NAV: NavItem[] = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { href: "/investigations/new", label: "New Investigation", icon: FilePlus2 },
@@ -62,7 +75,10 @@ export function governanceNav(user: User): NavItem[] {
     { href: "/data-controls", label: "Privacy & Data Controls", icon: ShieldCheck, match: (p) => p === "/data-controls" },
     { href: "/settings/profile", label: "Settings", icon: Settings, match: (p) => p.startsWith("/settings") },
   ];
-  if (user.role === "supervisor") items.push({ href: "/reviews", label: "Reviews", icon: ClipboardCheck });
+  if (user.role === "supervisor") {
+    items.push({ href: "/reviews", label: "Reviews", icon: ClipboardCheck });
+    items.push({ href: "/admin/abuse-reports", label: "Abuse reports", icon: ScrollText, match: (p) => p.startsWith("/admin") });
+  }
   if (user.role === "admin") items.push({ href: "/admin/users", label: "Administration", icon: UserCog, match: (p) => p.startsWith("/admin") });
   if (user.role === "auditor") items.push({ href: "/admin/audit-log", label: "Audit log", icon: ScrollText, match: (p) => p.startsWith("/admin") });
   return items;
@@ -120,13 +136,15 @@ export function SidebarNav({
 }) {
   return (
     <nav aria-label="Main" className="flex flex-col gap-6 p-3">
-      <Group title="Workspace" items={WORKSPACE_NAV} onNavigate={onNavigate} />
-      <Group
-        title={investigationRef ? `Investigation ${investigationRef}` : "Active investigation"}
-        items={investigationId ? investigationNav(investigationId) : []}
-        onNavigate={onNavigate}
-        empty="Open an investigation to see its images, sources, evidence, timeline, graph and reports."
-      />
+      <Group title="Workspace" items={workspaceNav(user)} onNavigate={onNavigate} />
+      {canUseInvestigations(user) ? (
+        <Group
+          title={investigationRef ? `Investigation ${investigationRef}` : "Active investigation"}
+          items={investigationId ? investigationNav(investigationId) : []}
+          onNavigate={onNavigate}
+          empty="Open an investigation to see its images, sources, evidence, timeline, graph and reports."
+        />
+      ) : null}
       <Group title="Governance" items={governanceNav(user)} onNavigate={onNavigate} />
     </nav>
   );

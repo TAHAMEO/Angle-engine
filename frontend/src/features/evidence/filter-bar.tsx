@@ -165,24 +165,24 @@ export function FilterBar({
         ) : null}
         <label className="ml-auto flex items-center gap-2 text-sm">
           <span className="text-muted">Sort</span>
-          <Select value={filters.sort ?? "updated"} onChange={(e) => set("sort", e.target.value as "updated" | "created")} className="h-8 w-40">
-            <option value="updated">Recently updated</option>
-            <option value="created">Recently created</option>
+          <Select value={filters.sort ?? "updated"} onChange={(e) => set("sort", e.target.value as "updated" | "created")} className="h-8 w-48">
+            <option value="updated">Last updated</option>
+            <option value="created">Newest first</option>
           </Select>
         </label>
       </div>
       {more ? (
         <div className="grid gap-3 border-t border-border pt-3 sm:grid-cols-2 lg:grid-cols-4">
           <MultiSelect label="Source category" options={CATEGORY_NAMES} value={filters.source_category} onChange={setList("source_category")} />
-          <label className="space-y-1 text-sm">
+          <label className="flex flex-col gap-1 text-sm">
             <span className="font-medium">Domain</span>
             <CommitInput value={filters.domain} onCommit={(v) => set("domain", v)} transform={(v) => v.toLowerCase()} placeholder="example.org" />
           </label>
-          <label className="space-y-1 text-sm">
+          <label className="flex flex-col gap-1 text-sm">
             <span className="font-medium">Connector</span>
             <CommitInput value={filters.connector} onCommit={(v) => set("connector", v)} placeholder="gdelt" />
           </label>
-          <label className="space-y-1 text-sm">
+          <label className="flex flex-col gap-1 text-sm">
             <span className="font-medium">Importance</span>
             <Select value={filters.importance ?? ""} onChange={(e) => set("importance", (e.target.value || undefined) as FindingFilters["importance"])}>
               <option value="">Any</option>
@@ -190,31 +190,31 @@ export function FilterBar({
               <option value="normal">Normal</option>
             </Select>
           </label>
-          <label className="space-y-1 text-sm">
+          <label className="flex flex-col gap-1 text-sm">
             <span className="font-medium">Captured from</span>
             <Input type="date" value={filters.captured_from ?? ""} onChange={(e) => set("captured_from", e.target.value || undefined)} />
           </label>
-          <label className="space-y-1 text-sm">
+          <label className="flex flex-col gap-1 text-sm">
             <span className="font-medium">Captured to</span>
             <Input type="date" value={filters.captured_to ?? ""} onChange={(e) => set("captured_to", e.target.value || undefined)} />
           </label>
-          <label className="space-y-1 text-sm">
+          <label className="flex flex-col gap-1 text-sm">
             <span className="font-medium">Published from</span>
             <Input type="date" value={filters.published_from ?? ""} onChange={(e) => set("published_from", e.target.value || undefined)} />
           </label>
-          <label className="space-y-1 text-sm">
+          <label className="flex flex-col gap-1 text-sm">
             <span className="font-medium">Published to</span>
             <Input type="date" value={filters.published_to ?? ""} onChange={(e) => set("published_to", e.target.value || undefined)} />
           </label>
-          <label className="space-y-1 text-sm">
+          <label className="flex flex-col gap-1 text-sm">
             <span className="font-medium">Country (ISO code)</span>
             <CommitInput value={filters.country} maxLength={2} onCommit={(v) => set("country", v)} transform={(v) => v.toUpperCase()} placeholder="GB" />
           </label>
-          <label className="space-y-1 text-sm">
+          <label className="flex flex-col gap-1 text-sm">
             <span className="font-medium">Region (ISO 3166-2)</span>
             <CommitInput value={filters.region} maxLength={10} onCommit={(v) => set("region", v)} transform={(v) => v.toUpperCase()} placeholder="GB-ENG" />
           </label>
-          <label className="space-y-1 text-sm">
+          <label className="flex flex-col gap-1 text-sm">
             <span className="font-medium">Contradictions</span>
             <Select value={filters.has_contradictions ?? ""} onChange={(e) => set("has_contradictions", (e.target.value || undefined) as FindingFilters["has_contradictions"])}>
               <option value="">Any</option>
@@ -222,7 +222,7 @@ export function FilterBar({
               <option value="false">No contradictions</option>
             </Select>
           </label>
-          <label className="space-y-1 text-sm">
+          <label className="flex flex-col gap-1 text-sm">
             <span className="font-medium">Retracted findings</span>
             <Select value={filters.include_retracted ?? ""} onChange={(e) => set("include_retracted", (e.target.value || undefined) as FindingFilters["include_retracted"])}>
               <option value="">Show</option>

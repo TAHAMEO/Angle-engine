@@ -74,7 +74,7 @@ export function StatusBreakdown({ byStatus, investigationId }: { byStatus: Recor
             )}
           </div>
         ) : null}
-        <ul className="grid gap-1.5 sm:grid-cols-2">
+        <ul className="grid gap-1.5">
           {ORDER.map((key) => (
             <li key={key} className="flex items-center justify-between gap-2 text-sm">
               <Link href={`${path(investigationId, "evidence")}?status=${key}`} className="rounded hover:underline">

@@ -19,6 +19,8 @@ const securityHeaders = [
 const nextConfig: NextConfig = {
   output: "standalone",
   poweredByHeader: false,
+  // Do not let `next dev` write AGENTS.md / CLAUDE.md into the project.
+  agentRules: false,
   reactStrictMode: true,
   turbopack: { root: import.meta.dirname },
   async rewrites() {

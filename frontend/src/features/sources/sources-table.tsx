@@ -81,7 +81,7 @@ export function SourcesTable() {
           setDomain(domainDraft.trim().toLowerCase());
         }}
       >
-        <label className="space-y-1 text-sm">
+        <label className="flex flex-col gap-1 text-sm">
           <span className="font-medium">Category</span>
           <Select value={category} onChange={(e) => setCategory(e.target.value)} className="w-56">
             <option value="">All categories</option>
@@ -92,7 +92,7 @@ export function SourcesTable() {
             ))}
           </Select>
         </label>
-        <label className="space-y-1 text-sm">
+        <label className="flex flex-col gap-1 text-sm">
           <span className="font-medium">Access</span>
           <Select value={access} onChange={(e) => setAccess(e.target.value)} className="w-44">
             <option value="">Any</option>
@@ -103,7 +103,7 @@ export function SourcesTable() {
             ))}
           </Select>
         </label>
-        <label className="space-y-1 text-sm">
+        <label className="flex flex-col gap-1 text-sm">
           <span className="font-medium">Domain</span>
           <Input value={domainDraft} onChange={(e) => setDomainDraft(e.target.value)} placeholder="example.org" className="w-48" />
         </label>

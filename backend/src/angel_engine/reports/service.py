@@ -230,7 +230,7 @@ async def finalize(
         "sha256": sha,
         "mac_prefix": mac.hex()[:32],
         "audit_seq": seq,
-        "finalized_at": now.isoformat(timespec="seconds"),
+        "finalized_at": now.strftime("%Y-%m-%d %H:%M:%S"),
     }
     _store(cipher, report, inputs, doc)
     report.status, report.final_mac, report.final_sha256 = "final", mac, sha

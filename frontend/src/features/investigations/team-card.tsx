@@ -113,7 +113,7 @@ export function TeamCard() {
               <span className="font-medium">Add a colleague by email</span>
               <Input type="email" required value={email} onChange={(event) => setEmail(event.target.value)} autoComplete="off" />
             </label>
-            <label className="space-y-1 text-sm">
+            <label className="flex flex-col gap-1 text-sm">
               <span className="font-medium">Role</span>
               <Select value={role} onChange={(event) => setRole(event.target.value as "editor" | "viewer")} className="w-28">
                 <option value="viewer">Viewer</option>

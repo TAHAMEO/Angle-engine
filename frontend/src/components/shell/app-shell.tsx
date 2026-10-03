@@ -20,7 +20,7 @@ import { qk } from "@/lib/query/keys";
 import { fetchSession, useSignOut } from "@/lib/session";
 import { cn } from "@/lib/utils";
 
-import { SidebarNav, WORKSPACE_NAV, governanceNav, investigationNav } from "./sidebar";
+import { SidebarNav, canUseInvestigations, governanceNav, investigationNav, workspaceNav } from "./sidebar";
 
 // ------------------------------------------------------------------------------------------- assistant
 const AssistantContext = createContext<{ open: boolean; setOpen: (open: boolean) => void }>({
@@ -135,7 +135,7 @@ function CommandPalette({ user, investigationId }: { user: User; investigationId
     return () => window.removeEventListener("keydown", onKey);
   }, []);
   const groups = [
-    { heading: "Workspace", items: WORKSPACE_NAV },
+    { heading: "Workspace", items: workspaceNav(user) },
     { heading: "Investigation", items: investigationId ? investigationNav(investigationId) : [] },
     { heading: "Governance", items: governanceNav(user) },
   ];
@@ -278,7 +278,7 @@ function RouteFocusManager() {
 export function AppShell({ session, children }: { session: Session; children: React.ReactNode }) {
   const user = session.user as User;
   const routeId = useInvestigationId();
-  const activeId = routeId ?? user.last_active_investigation_id ?? null;
+  const activeId = canUseInvestigations(user) ? (routeId ?? user.last_active_investigation_id ?? null) : null;
   const { data: investigation } = useInvestigationDetail(activeId);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [assistantOpen, setAssistantOpen] = useState(false);
@@ -293,9 +293,11 @@ export function AppShell({ session, children }: { session: Session; children: Re
             <MenuIcon className="h-5 w-5" aria-hidden />
           </Button>
           <Brand />
-          <div className="ml-2 hidden sm:block">
-            <InvestigationSwitcher currentId={routeId} currentRef={routeId ? (ref ?? undefined) : undefined} />
-          </div>
+          {canUseInvestigations(user) ? (
+            <div className="ml-2 hidden sm:block">
+              <InvestigationSwitcher currentId={routeId} currentRef={routeId ? (ref ?? undefined) : undefined} />
+            </div>
+          ) : null}
           <div className="ml-auto flex items-center gap-1">
             <CommandPalette user={user} investigationId={activeId} />
             {routeId ? (

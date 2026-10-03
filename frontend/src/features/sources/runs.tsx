@@ -180,7 +180,7 @@ export function RunsPanel() {
           <Th>Status</Th>
           <Th className="text-right">Records</Th>
           <Th className="text-right">References</Th>
-          <Th className="sr-only">Actions</Th>
+          <Th><span className="sr-only">Actions</span></Th>
         </tr>
       </thead>
       <tbody>

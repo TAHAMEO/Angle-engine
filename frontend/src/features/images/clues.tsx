@@ -191,7 +191,7 @@ export function CluesPanel({ image }: { image: ImageDetail }) {
     },
     onError: (error) => toast("AI vision is not available for this image", { description: messageOf(error), tone: "danger" }),
   });
-  const visionAllowed = inv.ai_enabled && image.reverse_search.allowed && can("ai:use");
+  const visionAllowed = inv.ai_enabled && image.reverse_search.allowed && can("content:write");
   return (
     <div className="space-y-3">
       <p className="text-sm text-muted">

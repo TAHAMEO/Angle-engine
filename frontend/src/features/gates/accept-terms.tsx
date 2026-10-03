@@ -39,7 +39,7 @@ export function AcceptTerms() {
       {isPending ? <LoadingBlock /> : null}
       {terms && aup ? (
         <Card className="space-y-4 p-5">
-          <ul className="space-y-1 text-sm">
+          <ul className="flex flex-col gap-1 text-sm">
             <li>
               <Link href="/legal/terms" target="_blank" className="text-primary underline">Terms of Use</Link> — version {terms.version}
             </li>
