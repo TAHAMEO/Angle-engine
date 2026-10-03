@@ -15,7 +15,7 @@ concurrency:
 env:
   SYSTEM_PACKAGES: >-
     postgresql-16 redis-server tesseract-ocr tesseract-ocr-eng
-    libpango-1.0-0 libpangoft2-1.0-0 libharfbuzz0b fonts-dejavu-core
+    libpango-1.0-0 libpangoft2-1.0-0 libharfbuzz0b libharfbuzz-subset0 fonts-dejavu-core
 
 jobs:
   backend:
@@ -27,8 +27,8 @@ jobs:
       matrix:
         python: ["3.11", "3.12"]
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
         with:
           python-version: ${{ matrix.python }}
           cache: pip
@@ -65,11 +65,11 @@ jobs:
       run:
         working-directory: frontend
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - uses: pnpm/action-setup@v4
         with:
           package_json_file: frontend/package.json
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v5
         with:
           node-version: 22
           cache: pnpm
@@ -87,8 +87,8 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 45
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
         with:
           python-version: "3.12"
           cache: pip
@@ -96,7 +96,7 @@ jobs:
       - uses: pnpm/action-setup@v4
         with:
           package_json_file: frontend/package.json
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v5
         with:
           node-version: 22
           cache: pnpm
@@ -130,7 +130,7 @@ jobs:
       ANGEL_DOMAIN: localhost
       COMPOSE: docker compose -f deploy/docker-compose.yml -f deploy/docker-compose.demo.yml
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: Throw-away secrets for this run
         run: deploy/generate-secrets.sh
       - name: Validate the Compose files

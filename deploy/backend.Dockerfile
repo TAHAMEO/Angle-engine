@@ -15,7 +15,7 @@ RUN apt-get update \
 
 FROM base AS build
 WORKDIR /build
-COPY README.md /build/README.md
+COPY backend/README.md /build/backend/README.md
 COPY backend/pyproject.toml /build/backend/pyproject.toml
 COPY backend/src /build/backend/src
 RUN pip wheel --wheel-dir /wheels "/build/backend[pdf,s3]"
