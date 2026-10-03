@@ -310,6 +310,85 @@
         "title": "ActivityOut",
         "type": "object"
       },
+      "AdminInvestigationOut": {
+        "properties": {
+          "closed_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Closed At"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "legal_hold": {
+            "title": "Legal Hold",
+            "type": "boolean"
+          },
+          "member_count": {
+            "title": "Member Count",
+            "type": "integer"
+          },
+          "owner_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Owner Name"
+          },
+          "purpose_category": {
+            "title": "Purpose Category",
+            "type": "string"
+          },
+          "ref": {
+            "title": "Ref",
+            "type": "string"
+          },
+          "restricted_mode": {
+            "title": "Restricted Mode",
+            "type": "boolean"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          },
+          "subject_type": {
+            "title": "Subject Type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "ref",
+          "status",
+          "subject_type",
+          "purpose_category",
+          "restricted_mode",
+          "legal_hold",
+          "owner_name",
+          "member_count",
+          "created_at",
+          "closed_at"
+        ],
+        "title": "AdminInvestigationOut",
+        "type": "object"
+      },
       "AdminUserOut": {
         "properties": {
           "access_justification": {
@@ -1244,6 +1323,49 @@
           "updated_at"
         ],
         "title": "DashboardSummary",
+        "type": "object"
+      },
+      "DataExportOut": {
+        "properties": {
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "downloaded_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Downloaded At"
+          },
+          "expires_at": {
+            "format": "date-time",
+            "title": "Expires At",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "status",
+          "created_at",
+          "expires_at",
+          "downloaded_at"
+        ],
+        "title": "DataExportOut",
         "type": "object"
       },
       "DeletionIn": {
@@ -4908,6 +5030,137 @@
           "password"
         ],
         "title": "LoginIn",
+        "type": "object"
+      },
+      "LookupIn": {
+        "properties": {
+          "abuse_report_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Abuse Report Id"
+          },
+          "kind": {
+            "enum": [
+              "url",
+              "domain",
+              "username",
+              "name"
+            ],
+            "title": "Kind",
+            "type": "string"
+          },
+          "platform": {
+            "anyOf": [
+              {
+                "maxLength": 60,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Platform"
+          },
+          "reason": {
+            "enum": [
+              "data_subject_request",
+              "abuse_report",
+              "legal_request"
+            ],
+            "title": "Reason",
+            "type": "string"
+          },
+          "value": {
+            "maxLength": 500,
+            "minLength": 2,
+            "title": "Value",
+            "type": "string"
+          }
+        },
+        "required": [
+          "kind",
+          "value",
+          "reason"
+        ],
+        "title": "LookupIn",
+        "type": "object"
+      },
+      "LookupMatch": {
+        "properties": {
+          "entities": {
+            "title": "Entities",
+            "type": "integer"
+          },
+          "investigation_id": {
+            "title": "Investigation Id",
+            "type": "string"
+          },
+          "legal_hold": {
+            "title": "Legal Hold",
+            "type": "boolean"
+          },
+          "owner_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Owner Name"
+          },
+          "ref": {
+            "title": "Ref",
+            "type": "string"
+          },
+          "sources": {
+            "title": "Sources",
+            "type": "integer"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "investigation_id",
+          "ref",
+          "status",
+          "legal_hold",
+          "owner_name",
+          "sources",
+          "entities"
+        ],
+        "title": "LookupMatch",
+        "type": "object"
+      },
+      "LookupOut": {
+        "properties": {
+          "checked": {
+            "title": "Checked",
+            "type": "integer"
+          },
+          "matches": {
+            "items": {
+              "$ref": "#/components/schemas/LookupMatch"
+            },
+            "title": "Matches",
+            "type": "array"
+          }
+        },
+        "required": [
+          "checked",
+          "matches"
+        ],
+        "title": "LookupOut",
         "type": "object"
       },
       "ManualCaptureIn": {
@@ -8903,6 +9156,48 @@
         ]
       }
     },
+    "/api/v1/admin/data-subject-lookup": {
+      "post": {
+        "description": "Find which investigations reference a URL, domain, public username or name — without reading content.\n\nNeeds a recent password confirmation; the lookup (kind, reason and number of matches — never the value) is\nrecorded in the audit log.",
+        "operationId": "data_subject_lookup_api_v1_admin_data_subject_lookup_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LookupIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LookupOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Data Subject Lookup",
+        "tags": [
+          "privacy"
+        ]
+      }
+    },
     "/api/v1/admin/flags": {
       "get": {
         "operationId": "flagged_users_api_v1_admin_flags_get",
@@ -8925,6 +9220,93 @@
         "summary": "Flagged Users",
         "tags": [
           "admin"
+        ]
+      }
+    },
+    "/api/v1/admin/investigations": {
+      "get": {
+        "description": "Investigations as metadata only (no titles, purposes or content) — for legal holds and abuse handling.",
+        "operationId": "admin_investigations_api_v1_admin_investigations_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "status",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/InvestigationStatus"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Status"
+            }
+          },
+          {
+            "in": "query",
+            "name": "ref",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 20,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Ref"
+            }
+          },
+          {
+            "in": "query",
+            "name": "legal_hold",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Legal Hold"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/AdminInvestigationOut"
+                  },
+                  "title": "Response Admin Investigations Api V1 Admin Investigations Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Admin Investigations",
+        "tags": [
+          "privacy"
         ]
       }
     },
@@ -17700,6 +18082,91 @@
         "summary": "Accept Terms",
         "tags": [
           "legal"
+        ]
+      }
+    },
+    "/api/v1/me/data-exports": {
+      "get": {
+        "operationId": "list_data_exports_api_v1_me_data_exports_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/DataExportOut"
+                  },
+                  "title": "Response List Data Exports Api V1 Me Data Exports Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "List Data Exports",
+        "tags": [
+          "privacy"
+        ]
+      },
+      "post": {
+        "description": "Request an archive of your account data (needs a recent password confirmation).",
+        "operationId": "create_data_export_api_v1_me_data_exports_post",
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DataExportOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Create Data Export",
+        "tags": [
+          "privacy"
+        ]
+      }
+    },
+    "/api/v1/me/data-exports/{export_id}/download": {
+      "get": {
+        "description": "Download the archive once. The stored copy is deleted afterwards.",
+        "operationId": "download_data_export_api_v1_me_data_exports__export_id__download_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "export_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Export Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/zip": {}
+            },
+            "description": "The account archive (single use)."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Download Data Export",
+        "tags": [
+          "privacy"
         ]
       }
     },

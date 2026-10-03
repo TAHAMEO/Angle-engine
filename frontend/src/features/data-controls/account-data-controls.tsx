@@ -13,6 +13,8 @@ import { QueryError } from "@/features/common/states";
 import { api, unwrap } from "@/lib/api/client";
 import { formatDateTime, humanize } from "@/lib/format";
 
+import { ExportMyData } from "./export-my-data";
+
 const LEGAL = [
   { href: "/legal/privacy", label: "Privacy Policy" },
   { href: "/legal/terms", label: "Terms of Use" },
@@ -87,6 +89,7 @@ export function AccountDataControls() {
             </div>
           </div>
         </Card>
+        <ExportMyData />
         <Card>
           <CardHeader title="Policies" />
           <ul className="divide-y divide-border">

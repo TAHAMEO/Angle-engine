@@ -55,6 +55,29 @@ export interface paths {
         patch: operations["update_abuse_report_api_v1_admin_abuse_reports__report_id__patch"];
         trace?: never;
     };
+    "/api/v1/admin/data-subject-lookup": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Data Subject Lookup
+         * @description Find which investigations reference a URL, domain, public username or name — without reading content.
+         *
+         *     Needs a recent password confirmation; the lookup (kind, reason and number of matches — never the value) is
+         *     recorded in the audit log.
+         */
+        post: operations["data_subject_lookup_api_v1_admin_data_subject_lookup_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/admin/flags": {
         parameters: {
             query?: never;
@@ -64,6 +87,26 @@ export interface paths {
         };
         /** Flagged Users */
         get: operations["flagged_users_api_v1_admin_flags_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/investigations": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Admin Investigations
+         * @description Investigations as metadata only (no titles, purposes or content) — for legal holds and abuse handling.
+         */
+        get: operations["admin_investigations_api_v1_admin_investigations_get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -2118,6 +2161,47 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/me/data-exports": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Data Exports */
+        get: operations["list_data_exports_api_v1_me_data_exports_get"];
+        put?: never;
+        /**
+         * Create Data Export
+         * @description Request an archive of your account data (needs a recent password confirmation).
+         */
+        post: operations["create_data_export_api_v1_me_data_exports_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/me/data-exports/{export_id}/download": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Download Data Export
+         * @description Download the archive once. The stored copy is deleted afterwards.
+         */
+        get: operations["download_data_export_api_v1_me_data_exports__export_id__download_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/me/policy-decisions": {
         parameters: {
             query?: never;
@@ -2353,6 +2437,34 @@ export interface components {
             target_id: string | null;
             /** Target Type */
             target_type: string | null;
+        };
+        /** AdminInvestigationOut */
+        AdminInvestigationOut: {
+            /** Closed At */
+            closed_at: string | null;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Id */
+            id: string;
+            /** Legal Hold */
+            legal_hold: boolean;
+            /** Member Count */
+            member_count: number;
+            /** Owner Name */
+            owner_name: string | null;
+            /** Purpose Category */
+            purpose_category: string;
+            /** Ref */
+            ref: string;
+            /** Restricted Mode */
+            restricted_mode: boolean;
+            /** Status */
+            status: string;
+            /** Subject Type */
+            subject_type: string;
         };
         /** AdminUserOut */
         AdminUserOut: {
@@ -2669,6 +2781,25 @@ export interface components {
              * Format: date-time
              */
             updated_at: string;
+        };
+        /** DataExportOut */
+        DataExportOut: {
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Downloaded At */
+            downloaded_at: string | null;
+            /**
+             * Expires At
+             * Format: date-time
+             */
+            expires_at: string;
+            /** Id */
+            id: string;
+            /** Status */
+            status: string;
         };
         /** DeletionIn */
         DeletionIn: {
@@ -3810,6 +3941,49 @@ export interface components {
             email: string;
             /** Password */
             password: string;
+        };
+        /** LookupIn */
+        LookupIn: {
+            /** Abuse Report Id */
+            abuse_report_id?: string | null;
+            /**
+             * Kind
+             * @enum {string}
+             */
+            kind: "url" | "domain" | "username" | "name";
+            /** Platform */
+            platform?: string | null;
+            /**
+             * Reason
+             * @enum {string}
+             */
+            reason: "data_subject_request" | "abuse_report" | "legal_request";
+            /** Value */
+            value: string;
+        };
+        /** LookupMatch */
+        LookupMatch: {
+            /** Entities */
+            entities: number;
+            /** Investigation Id */
+            investigation_id: string;
+            /** Legal Hold */
+            legal_hold: boolean;
+            /** Owner Name */
+            owner_name: string | null;
+            /** Ref */
+            ref: string;
+            /** Sources */
+            sources: number;
+            /** Status */
+            status: string;
+        };
+        /** LookupOut */
+        LookupOut: {
+            /** Checked */
+            checked: number;
+            /** Matches */
+            matches: components["schemas"]["LookupMatch"][];
         };
         /**
          * ManualCaptureIn
@@ -5221,6 +5395,39 @@ export interface operations {
             };
         };
     };
+    data_subject_lookup_api_v1_admin_data_subject_lookup_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LookupIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LookupOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     flagged_users_api_v1_admin_flags_get: {
         parameters: {
             query?: never;
@@ -5237,6 +5444,39 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["AdminUserOut"][];
+                };
+            };
+        };
+    };
+    admin_investigations_api_v1_admin_investigations_get: {
+        parameters: {
+            query?: {
+                status?: components["schemas"]["InvestigationStatus"] | null;
+                ref?: string | null;
+                legal_hold?: boolean | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AdminInvestigationOut"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
                 };
             };
         };
@@ -9868,6 +10108,77 @@ export interface operations {
                     "application/json": {
                         [key: string]: string;
                     };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_data_exports_api_v1_me_data_exports_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DataExportOut"][];
+                };
+            };
+        };
+    };
+    create_data_export_api_v1_me_data_exports_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DataExportOut"];
+                };
+            };
+        };
+    };
+    download_data_export_api_v1_me_data_exports__export_id__download_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                export_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The account archive (single use). */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/zip": unknown;
                 };
             };
             /** @description Validation Error */

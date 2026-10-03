@@ -9,6 +9,7 @@ import { cn } from "@/lib/utils";
 
 const ADMIN = [
   { href: "/admin/users", label: "Users" },
+  { href: "/admin/investigations", label: "Investigations" },
   { href: "/admin/connectors", label: "Connectors" },
   { href: "/admin/retention", label: "Retention" },
   { href: "/admin/abuse-reports", label: "Abuse reports" },
