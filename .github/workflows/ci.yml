@@ -131,6 +131,8 @@ jobs:
       COMPOSE: docker compose -f deploy/docker-compose.yml -f deploy/docker-compose.demo.yml
     steps:
       - uses: actions/checkout@v5
+      - name: Pre-flight checks (as make up / make demo run them)
+        run: deploy/preflight.sh
       - name: Throw-away secrets for this run
         run: deploy/generate-secrets.sh
       - name: Validate the Compose files
@@ -175,6 +177,15 @@ jobs:
             echo "worker-analysis reached the internet" >&2
             exit 1
           fi
+      - name: A second copy of the project is told the database is not its own
+        run: |
+          mv deploy/secrets deploy/secrets.kept
+          trap 'mv deploy/secrets.kept deploy/secrets' EXIT
+          if deploy/preflight.sh 2>preflight.err; then
+            echo "preflight accepted a copy without the database's secrets" >&2
+            exit 1
+          fi
+          grep -q 'make demo-reset' preflight.err
       - name: Logs
         if: failure()
         run: $COMPOSE logs --no-color --tail=200

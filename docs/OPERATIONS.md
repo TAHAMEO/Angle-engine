@@ -252,7 +252,7 @@ passwords and TOTP secrets, so remove the demo completely before switching (prod
 active demo accounts exist):
 
 ```bash
-docker compose -f deploy/docker-compose.yml -f deploy/docker-compose.demo.yml down -v
+make demo-reset                         # deletes the demo's containers and data (asks first)
 cp deploy/.env.example deploy/.env      # ANGEL_DOMAIN, ANGEL_OPERATOR_CONTACT, API keys; on a workstation also
                                         # ANGEL_DOMAIN=localhost and ANGEL_BIND_ADDRESS=127.0.0.1
 make up
@@ -270,6 +270,14 @@ Administrators cannot read investigations, so also create the people who do the 
 scanner and fictional `.example` data, and loads demo accounts with a fixed password and fixed TOTP secrets
 printed by the seed. The demo override publishes Caddy on 127.0.0.1 only. **Never expose a demo deployment to a
 network**: its credentials are public.
+
+`make demo-stop` stops the demo and keeps its data; `make demo-reset` deletes its containers and volumes. To run
+other Compose commands against the demo, pass the domain, which the demo has no `deploy/.env` for:
+`ANGEL_DOMAIN=localhost docker compose -f deploy/docker-compose.yml -f deploy/docker-compose.demo.yml logs api`.
+
+`make up` and `make demo` first run `deploy/preflight.sh`, which stops with an explanation when this user cannot
+use Docker, or when Docker already holds an Angel Engine database but this copy of the project has no
+`deploy/secrets/` (a second clone or a fresh download: its new passwords would not match the existing database).
 
 ## Limits of this deployment model
 

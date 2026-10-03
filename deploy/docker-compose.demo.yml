@@ -1,8 +1,9 @@
 # Offline demo on https://localhost (Caddy's internal CA): recorded connector responses, the offline demo AI,
 # the development malware scanner and the fixture face detector. Never use this override in production.
 #
-#   docker compose -f deploy/docker-compose.yml -f deploy/docker-compose.demo.yml up -d --build
-#   docker compose -f deploy/docker-compose.yml -f deploy/docker-compose.demo.yml run --rm api angel-engine seed-demo
+#   make demo          (make demo-stop, make demo-reset); by hand:
+#   ANGEL_DOMAIN=localhost docker compose -f deploy/docker-compose.yml -f deploy/docker-compose.demo.yml up -d --build
+#   ANGEL_DOMAIN=localhost docker compose -f deploy/docker-compose.yml -f deploy/docker-compose.demo.yml run --rm api angel-engine seed-demo
 x-demo-env: &demo-env
   ANGEL_ENV: development
   ANGEL_CONNECTOR_MODE: fixtures

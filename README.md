@@ -54,7 +54,13 @@ See [`docs/`](docs/) for the full picture: [architecture](docs/ARCHITECTURE.md),
 
 ```bash
 make demo        # generates secrets, builds the images, starts https://localhost and loads the demo data
+make demo-stop   # stops it (the data is kept; make demo starts it again)
+make demo-reset  # deletes the demo's containers and data, to start over
 ```
+
+Docker must be usable without `sudo`: `sudo usermod -aG docker "$USER"`, then log out and back in. Run the
+commands from one copy of the project: the demo's database keeps the passwords stored in that copy's
+`deploy/secrets/`, and `make demo` explains what to do if a second copy finds it.
 
 The demo uses recorded connector responses, an offline demo AI and fictional `.example` data. Sign in at
 `https://localhost` (accept Caddy's local certificate) with `investigator@angel-engine.example` and the password

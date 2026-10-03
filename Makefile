@@ -73,18 +73,35 @@ web-check: ## Lint, type-check, test and verify the web client's API types
 e2e: ## Build the web client and run the Playwright end-to-end suite (starts a disposable backend)
 	cd frontend && ANGEL_DEV_API_ORIGIN=http://127.0.0.1:8000 pnpm build && pnpm e2e
 
+# The demo always publishes Caddy on 127.0.0.1 (docker-compose.demo.yml). ANGEL_BIND_ADDRESS is defined only so that
+# older Compose versions do not warn that it is unset; never export it globally, it would override deploy/.env.
+DEMO_COMPOSE := ANGEL_DOMAIN=localhost ANGEL_BIND_ADDRESS= docker compose -f deploy/docker-compose.yml -f deploy/docker-compose.demo.yml
+
 .PHONY: compose-config
 compose-config: ## Validate the Docker Compose files (production and demo)
 	ANGEL_DOMAIN=$${ANGEL_DOMAIN:-angel.example.org} docker compose -f deploy/docker-compose.yml config -q
-	ANGEL_DOMAIN=localhost docker compose -f deploy/docker-compose.yml -f deploy/docker-compose.demo.yml config -q
+	$(DEMO_COMPOSE) config -q
 
 .PHONY: up
 up: ## Build and start the production stack (needs deploy/.env)
+	deploy/preflight.sh
 	deploy/generate-secrets.sh
 	docker compose -f deploy/docker-compose.yml up -d --build
 
 .PHONY: demo
 demo: ## Build and start the offline demo on https://localhost and load the demo data
+	deploy/preflight.sh
 	deploy/generate-secrets.sh
-	ANGEL_DOMAIN=localhost docker compose -f deploy/docker-compose.yml -f deploy/docker-compose.demo.yml up -d --build
-	ANGEL_DOMAIN=localhost docker compose -f deploy/docker-compose.yml -f deploy/docker-compose.demo.yml run --rm api angel-engine seed-demo
+	$(DEMO_COMPOSE) up -d --build
+	$(DEMO_COMPOSE) run --rm api angel-engine seed-demo
+
+.PHONY: demo-stop
+demo-stop: ## Stop the offline demo (its data is kept; `make demo` starts it again)
+	$(DEMO_COMPOSE) down
+
+.PHONY: demo-reset
+demo-reset: ## Delete the offline demo: its containers and all Angel Engine data in Docker on this machine
+	@printf '%s\n%s' "This deletes the Angel Engine containers and ALL Angel Engine data in Docker on this machine" \
+		"(the demo's, or a real installation's: they share one Compose project). Type delete to continue: "
+	@read -r answer && [ "$$answer" = delete ] || { echo "Cancelled; nothing was deleted."; exit 1; }
+	$(DEMO_COMPOSE) down -v

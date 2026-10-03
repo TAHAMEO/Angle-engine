@@ -29,6 +29,5 @@ async def refuse_demo_accounts(svc: Services) -> None:
     if found:
         raise DemoAccountsPresent(
             f"{len(found)} offline-demo account(s) with public passwords and TOTP secrets are active in this database. "
-            "Production mode refuses to start. Remove the demo data (docker compose -f deploy/docker-compose.yml "
-            "-f deploy/docker-compose.demo.yml down -v) or disable these accounts first."
+            "Production mode refuses to start. Remove the demo data (make demo-reset) or disable these accounts first."
         )

@@ -18,7 +18,7 @@ async def test_active_demo_accounts_block_production_start(services):
     async with services.db.session("app") as db:
         db.add(User(email=email, display_name="Demo admin", password_hash="x", role="admin", status="active"))
     try:
-        with pytest.raises(DemoAccountsPresent, match="down -v"):
+        with pytest.raises(DemoAccountsPresent, match="make demo-reset"):
             await refuse_demo_accounts(services)
         async with services.db.session("app") as db:
             await db.execute(update(User).where(User.email == email).values(status="disabled"))
